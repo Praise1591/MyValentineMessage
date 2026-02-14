@@ -7,7 +7,7 @@ import {
   ResponsiveContainer, ReferenceLine
 } from 'recharts';
 
-const OurLittleWorld = () => {
+const HerLittleWorld = () => {  // ← renamed to match the new center
   const [stage, setStage] = useState(0);
   const [answers, setAnswers] = useState({
     butterflies: '',
@@ -23,7 +23,7 @@ const OurLittleWorld = () => {
   const next = () => {
     const currentAnswer = Object.values(answers)[stage];
     if (!currentAnswer?.trim()) {
-      toast.warn("Just a few words from you would mean the world right now 🌸", {
+      toast.warn("Just a few words from you would light this whole thing up 🌸", {
         position: "top-center",
         theme: "colored",
         autoClose: 4000
@@ -35,7 +35,7 @@ const OurLittleWorld = () => {
     } else {
       setStage(4);
       setTimeout(() => {
-        toast.success("Thank you… for letting me show you this 💗", {
+        toast.success("Thank you… for letting me glimpse your world 💗", {
           position: "top-center",
           autoClose: 6500,
           hideProgressBar: true
@@ -45,34 +45,34 @@ const OurLittleWorld = () => {
   };
 
   const data = [
-    { name: 'First message', closeness: 18, label: "your name appeared" },
-    { name: 'First long talk', closeness: 42, label: "hours disappeared" },
+    { name: 'First message', closeness: 18, label: "your words arrived" },
+    { name: 'First long talk', closeness: 42, label: "time melted away" },
     { name: 'Today', closeness: answers.quietWish.trim() ? 78 : 65, label: "right now" },
-    { name: 'Someday', closeness: 92, label: "if life allows" }
+    { name: 'Someday', closeness: 92, label: "whatever comes next" }
   ];
 
   const questions = [
     {
-      title: "What still gives you butterflies?",
-      placeholder: "maybe when my name lights up your screen…",
+      title: "What still gives *you* butterflies?",
+      placeholder: "maybe a notification… a voice note… something small that makes your heart jump",
       field: 'butterflies',
       icon: Smile
     },
     {
-      title: "A moment with me you sometimes imagine",
-      placeholder: "even if it’s only in your head for now…",
+      title: "A moment you sometimes catch yourself daydreaming about",
+      placeholder: "could be anything — big or tiny, real or still just a feeling…",
       field: 'dreamMoment',
       icon: Calendar
     },
     {
-      title: "Something small I do that feels special to you",
-      placeholder: "the way I reply, a certain emoji, remembering something you said…",
+      title: "Something small someone does that feels special to you",
+      placeholder: "a certain tone, remembering something tiny you said, a good morning at the right moment…",
       field: 'whatFeelsSpecial',
       icon: MessageCircleHeart
     },
     {
-      title: "One quiet wish you have (about us or just for you)",
-      placeholder: "no pressure… whatever is true right now",
+      title: "One quiet wish you’re holding right now (for you, or just in general)",
+      placeholder: "no pressure… whatever feels true tonight",
       field: 'quietWish',
       icon: Gift
     }
@@ -104,25 +104,26 @@ const OurLittleWorld = () => {
         {stage === 0 && (
           <div className="space-y-10 text-center animate-fade">
             <div className="flex justify-center">
-              <Heart className="h-20 w-20 text-rose-500 animate-pulse-soft" fill="#f43f5e40" />
+              <Sparkles className="h-20 w-20 text-pink-500 animate-pulse-soft" />
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent leading-tight">
-              This is all I have right now
+              This is all about you
             </h1>
 
             <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
               <p>
-                I don’t have much money for flowers that last a week,<br />
-                or dinner in a nice place, or a trip somewhere beautiful.
+                I don’t have grand gestures to offer right now —<br />
+                no tickets, no fancy reservations, no bouquet that lasts.
               </p>
               <p className="font-medium">
-                But I have these words… and a few hours of trying to put feelings into code…<br />
-                and every message you’ve ever sent me saved in my heart.
+                But I have this little digital corner…<br />
+                built just to hold space for whatever you feel like sharing.
               </p>
               <p>
-                We’ve never met. We’ve only talked.<br />
-                And still — talking to you already feels like one of the nicest things in my life.
+                Talking to you already feels like the softest, brightest part of my days.<br />
+                So I wanted to make something that says:<br />
+                <span className="italic">your world matters to me.</span>
               </p>
             </div>
 
@@ -130,7 +131,7 @@ const OurLittleWorld = () => {
               onClick={() => setStage(1)}
               className="mt-8 inline-flex items-center gap-3 px-9 py-5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all group"
             >
-              Can I show you something small?
+              Can I hear a little more from your heart?
               <ArrowRight className="group-hover:translate-x-1.5 transition-transform" />
             </button>
           </div>
@@ -159,7 +160,7 @@ const OurLittleWorld = () => {
                 onClick={next}
                 className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all group text-base sm:text-lg"
               >
-                {stage === 3 ? "Let me see it all together" : "Next gentle step"}
+                {stage === 3 ? "Show me your answers together" : "Next little step"}
                 <ArrowRight className="group-hover:translate-x-1.5 transition-transform" />
               </button>
             </div>
@@ -170,10 +171,10 @@ const OurLittleWorld = () => {
           <div className="space-y-10 animate-fade">
             <div className="text-center">
               <h2 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-6">
-                This is us… so far
+                This is your light… so far
               </h2>
               <p className="text-lg text-gray-700">
-                A tiny line that keeps going up — because of you.
+                A gentle curve that keeps rising — because of the way you shine.
               </p>
             </div>
 
@@ -204,7 +205,7 @@ const OurLittleWorld = () => {
                     fill="url(#heartGradient)"
                     strokeWidth={2.5}
                   />
-                  <ReferenceLine y={80} label={{ value: "Getting closer", position: 'insideTopRight', fill: '#9f1239', fontSize: 13 }} stroke="#c026d3" strokeDasharray="5 5" />
+                  <ReferenceLine y={80} label={{ value: "Beautiful place to be", position: 'insideTopRight', fill: '#9f1239', fontSize: 13 }} stroke="#c026d3" strokeDasharray="5 5" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -224,12 +225,12 @@ const OurLittleWorld = () => {
 
             <div className="pt-6 text-center text-gray-700 leading-relaxed">
               <p className="text-lg font-medium text-rose-700 mb-4">
-                Thank you for every reply, every emoji, every tiny moment you shared.
+                Thank you for every word, every pause, every little piece of yourself you let me see.
               </p>
               <p>
-                This page — this silly little graph — is not expensive.<br />
-                But it is honest.<br />
-                And it was made with someone I really like… in mind.
+                This tiny page isn’t lavish.<br />
+                But it’s real.<br />
+                And it exists because your presence already makes everything feel warmer and more alive.
               </p>
             </div>
           </div>
@@ -265,4 +266,4 @@ const OurLittleWorld = () => {
   );
 };
 
-export default OurLittleWorld;
+export default HerLittleWorld;
