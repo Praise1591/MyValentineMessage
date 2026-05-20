@@ -8,7 +8,8 @@ import {
   ChevronRight, Menu, X, ArrowRight, MapPin, Phone, Mail, 
   CheckCircle, Headphones, ArrowUp, Search, FileText, Download,
   Eye, Navigation, LocateFixed, Calendar, Clock as ClockIcon,
-  Sun, Moon, Lock, Key, User, LogIn
+  Sun, Moon, Lock, Key, User, LogIn, Award, TrendingUp, 
+  Heart, Gift, Coffee, Smartphone, Laptop, Bot, Cpu, Sparkles
 } from "lucide-react";
 
 function LandingPage() {
@@ -28,6 +29,8 @@ function LandingPage() {
   const [activeCustomerTab, setActiveCustomerTab] = useState("track");
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   
   // Admin Login States
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -44,15 +47,18 @@ function LandingPage() {
 
   const features = [
     { icon: Zap, title: "Lightning Fast", description: "Same-day delivery across all major cities", color: "#f59e0b" },
-    { icon: Shield, title: "100% Secure", description: "End-to-end encryption & insurance", color: "#10b981" },
-    { icon: Globe, title: "Global Reach", description: "200+ countries worldwide", color: "#3b82f6" },
-    { icon: Clock, title: "24/7 Support", description: "Round-the-clock assistance", color: "#8b5cf6" }
+    { icon: Shield, title: "100% Secure", description: "End-to-end encryption & insurance up to $10,000", color: "#10b981" },
+    { icon: Globe, title: "Global Reach", description: "200+ countries worldwide with local partners", color: "#3b82f6" },
+    { icon: Clock, title: "24/7 Support", description: "Round-the-clock assistance via email", color: "#8b5cf6" },
+    { icon: Award, title: "Trusted Service", description: "10,000+ satisfied customers", color: "#ec4899" },
+    { icon: TrendingUp, title: "Real-time Tracking", description: "Live updates at every step", color: "#06b6d4" }
   ];
 
   const stats = [
     { value: "50K+", label: "Deliveries", icon: Package },
     { value: "98%", label: "On-Time Rate", icon: Clock },
-    { value: "4.9", label: "Rating", icon: Star }
+    { value: "4.9", label: "Rating", icon: Star },
+    { value: "200+", label: "Cities", icon: Globe }
   ];
 
   // Typing animation
@@ -202,57 +208,58 @@ function LandingPage() {
   };
 
   const bgGradient = darkMode 
-    ? "bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]"
-    : "bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100";
+    ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
+    : "bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50";
 
   const textColor = darkMode ? "text-white" : "text-slate-800";
-  const cardBg = darkMode ? "bg-white/10" : "bg-white/90";
-  const borderColor = darkMode ? "border-white/20" : "border-black/10";
+  const cardBg = darkMode ? "bg-white/10 backdrop-blur-xl" : "bg-white/80 backdrop-blur-xl";
+  const borderColor = darkMode ? "border-white/20" : "border-white/50";
 
   return (
-    <div className={`${bgGradient} ${textColor} overflow-x-hidden min-h-screen relative transition-all duration-300`}>
+    <div className={`${bgGradient} ${textColor} overflow-x-hidden min-h-screen relative transition-all duration-500`}>
       {/* Animated Background */}
       <div className="fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute w-[500px] h-[500px] -top-[200px] -left-[200px] rounded-full bg-gradient-radial from-blue-500/15 to-transparent animate-float"></div>
-        <div className="absolute w-[300px] h-[300px] -bottom-[100px] -right-[100px] rounded-full bg-gradient-radial from-purple-500/15 to-transparent animate-float-delayed"></div>
-        <div className="absolute w-[400px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-radial from-pink-500/10 to-transparent animate-float-slow"></div>
+        <div className="absolute w-[600px] h-[600px] -top-[300px] -right-[200px] rounded-full bg-gradient-radial from-blue-500/10 to-transparent animate-float"></div>
+        <div className="absolute w-[500px] h-[500px] -bottom-[250px] -left-[200px] rounded-full bg-gradient-radial from-purple-500/10 to-transparent animate-float-delayed"></div>
+        <div className="absolute w-[400px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-radial from-pink-500/5 to-transparent animate-float-slow"></div>
+        <div className="absolute w-[300px] h-[300px] top-20 right-20 rounded-full bg-gradient-radial from-cyan-500/5 to-transparent animate-pulse-slow"></div>
       </div>
 
       <Toaster position="top-right" />
 
       {/* Admin Access Icon */}
       <div 
-        className="fixed bottom-5 left-5 w-11 h-11 bg-black/50 rounded-full flex items-center justify-center cursor-pointer z-[99] transition-all duration-300 hover:bg-blue-600 hover:scale-110 backdrop-blur-sm"
+        className="fixed bottom-5 left-5 w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center cursor-pointer z-[99] transition-all duration-300 hover:scale-110 hover:shadow-xl backdrop-blur-sm shadow-lg group"
         onClick={() => setShowAdminLogin(true)}
       >
-        <Shield size={22} color="white" />
+        <Shield size={22} color="white" className="group-hover:rotate-12 transition-transform" />
       </div>
 
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 ${darkMode ? 'bg-[#0f0c29]/95' : 'bg-white/95'} backdrop-blur-xl z-[1000] border-b ${borderColor} transition-all duration-300`}>
+      <nav className={`fixed top-0 left-0 right-0 ${darkMode ? 'bg-slate-900/95' : 'bg-white/95'} backdrop-blur-xl z-[1000] border-b ${borderColor} transition-all duration-300 shadow-sm`}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('home')}>
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse-glow">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => scrollToSection('home')}>
+            <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse-glow shadow-lg group-hover:scale-105 transition-transform">
               <Truck size={28} color="white" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">CYCLE</div>
-              <div className={`text-xs ${darkMode ? 'text-white/60' : 'text-slate-500'}`}>Logistics Platform</div>
+              <div className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">CYCLE</div>
+              <div className={`text-xs ${darkMode ? 'text-white/60' : 'text-slate-500'}`}>Premium Logistics</div>
             </div>
           </div>
           
-          <div className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col md:flex-row absolute md:relative top-[72px] md:top-0 left-0 right-0 ${darkMode ? 'bg-[#0f0c29]/98' : 'bg-white/98'} md:bg-transparent p-8 md:p-0 gap-6 md:gap-8 items-center z-50 transition-all duration-300`}>
-            <a onClick={() => scrollToSection('home')} className="cursor-pointer hover:text-blue-500 transition-all">Home</a>
-            <a onClick={() => scrollToSection('features')} className="cursor-pointer hover:text-blue-500 transition-all">Features</a>
-            <a onClick={() => scrollToSection('customer-portal')} className="cursor-pointer hover:text-blue-500 transition-all">Track Delivery</a>
-            <a onClick={() => scrollToSection('contact')} className="cursor-pointer hover:text-blue-500 transition-all">Contact</a>
+          <div className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col md:flex-row absolute md:relative top-[72px] md:top-0 left-0 right-0 ${darkMode ? 'bg-slate-900/98' : 'bg-white/98'} md:bg-transparent p-8 md:p-0 gap-6 md:gap-8 items-center z-50 transition-all duration-300`}>
+            <a onClick={() => scrollToSection('home')} className="cursor-pointer hover:text-blue-500 transition-all font-medium">Home</a>
+            <a onClick={() => scrollToSection('features')} className="cursor-pointer hover:text-blue-500 transition-all font-medium">Features</a>
+            <a onClick={() => scrollToSection('customer-portal')} className="cursor-pointer hover:text-blue-500 transition-all font-medium">Track Delivery</a>
+            <a onClick={() => scrollToSection('contact')} className="cursor-pointer hover:text-blue-500 transition-all font-medium">Contact</a>
           </div>
           
           <div className="flex gap-3 items-center">
-            <button onClick={() => setDarkMode(!darkMode)} className="cursor-pointer">
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            <button onClick={() => setDarkMode(!darkMode)} className="cursor-pointer p-2 rounded-full hover:bg-gray-200/20 transition">
+              {darkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} />}
             </button>
-            <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className="md:hidden p-2 rounded-full hover:bg-gray-200/20 transition" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -261,47 +268,51 @@ function LandingPage() {
 
       {/* Hero Section */}
       <section className="min-h-screen pt-32 pb-20 px-4 sm:px-8 relative z-10 flex items-center" id="home">
-        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          <div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
+        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm mb-6">
+              <Sparkles size={16} className="text-purple-500" />
+              <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Premium Delivery Service</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-tight">
               Track Your
               <span className="block mt-2">
                 <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">{typedText}</span>
-                <span className="inline-block w-1 h-8 ml-1 bg-gradient-to-r from-blue-500 to-purple-500 animate-blink">|</span>
+                <span className="inline-block w-1 h-10 ml-1 bg-gradient-to-r from-blue-500 to-purple-500 animate-blink">|</span>
               </span>
               <br />in Real-Time
             </h1>
-            <p className={`text-base sm:text-lg mt-6 leading-relaxed ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
-              Enterprise-grade logistics platform. Track your packages in real-time, 
+            <p className={`text-base sm:text-lg mt-6 leading-relaxed max-w-lg ${darkMode ? 'text-white/70' : 'text-slate-600'}`}>
+              Enterprise-grade logistics platform with AI-powered tracking. Track your packages in real-time, 
               get instant updates, and experience hassle-free deliveries with Cycle.
             </p>
             <div className="flex flex-wrap gap-8 mt-8">
               {stats.map((stat, idx) => {
                 const IconComponent = stat.icon;
                 return (
-                  <div key={idx} className="text-center">
-                    <IconComponent size={24} className="text-blue-500 mx-auto" />
-                    <div className="text-2xl font-bold mt-1">{stat.value}</div>
+                  <motion.div key={idx} className="text-center" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.1 }}>
+                    <IconComponent size={28} className="text-blue-500 mx-auto mb-2" />
+                    <div className="text-2xl font-bold">{stat.value}</div>
                     <div className={`text-xs ${darkMode ? 'text-white/60' : 'text-slate-500'}`}>{stat.label}</div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
           <div>
             {!showCustomerPortal ? (
-              <motion.div className={`${cardBg} backdrop-blur-md rounded-2xl p-6 sm:p-8 border ${borderColor} shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+              <motion.div className={`${cardBg} backdrop-blur-md rounded-2xl p-6 sm:p-8 border ${borderColor} shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-3xl`} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                 <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">
                   <button 
                     onClick={() => setActiveCustomerTab("track")} 
-                    className={`cursor-pointer font-medium px-4 py-2 transition-all ${activeCustomerTab === "track" ? 'text-blue-500 border-b-2 border-blue-500' : ''}`}
+                    className={`cursor-pointer font-medium px-4 py-2 transition-all rounded-lg ${activeCustomerTab === "track" ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md' : ''}`}
                   >
                     Quick Track
                   </button>
                   <button 
                     onClick={() => setActiveCustomerTab("login")} 
-                    className={`cursor-pointer font-medium px-4 py-2 transition-all ${activeCustomerTab === "login" ? 'text-blue-500 border-b-2 border-blue-500' : ''}`}
+                    className={`cursor-pointer font-medium px-4 py-2 transition-all rounded-lg ${activeCustomerTab === "login" ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md' : ''}`}
                   >
                     My Account
                   </button>
@@ -309,7 +320,7 @@ function LandingPage() {
 
                 {activeCustomerTab === "track" ? (
                   <>
-                    <h3 className="text-xl font-bold mb-2">Quick Track</h3>
+                    <h3 className="text-2xl font-bold mb-2">Quick Track</h3>
                     <p className={`text-sm ${darkMode ? 'text-white/60' : 'text-slate-500'} mb-4`}>Enter your tracking ID to get real-time updates</p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <input 
@@ -324,10 +335,13 @@ function LandingPage() {
                         Track Now <Search size={16} className="inline ml-2" />
                       </button>
                     </div>
+                    <div className="mt-4 p-3 rounded-lg bg-blue-500/10 text-xs text-center">
+                      <span className="font-medium">🔍 Pro tip:</span> Enter your tracking ID from order confirmation email
+                    </div>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-bold mb-2">Customer Portal</h3>
+                    <h3 className="text-2xl font-bold mb-2">Customer Portal</h3>
                     <p className={`text-sm ${darkMode ? 'text-white/60' : 'text-slate-500'} mb-4`}>Enter the email used when placing your order</p>
                     <input 
                       type="email" 
@@ -339,20 +353,27 @@ function LandingPage() {
                     <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold transition-all hover:-translate-y-1 hover:shadow-lg disabled:opacity-50" onClick={handleCustomerLogin} disabled={loading}>
                       {loading ? <div className="spinner mx-auto" /> : <>Access My Deliveries <ArrowRight size={16} className="inline ml-2" /></>}
                     </button>
-                    <p className={`text-xs text-center mt-3 opacity-50`}>
+                    <p className={`text-xs text-center mt-3 opacity-60`}>
                       Only deliveries created with your email will appear here
                     </p>
                   </>
                 )}
               </motion.div>
             ) : (
-              <motion.div className={`${cardBg} backdrop-blur-md rounded-2xl p-6 sm:p-8 border ${borderColor} shadow-xl`} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <motion.div className={`${cardBg} backdrop-blur-md rounded-2xl p-6 sm:p-8 border ${borderColor} shadow-2xl`} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                 <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
                   <div>
-                    <h3 className="text-xl font-bold mb-1">Welcome, {customerEmail.split('@')[0]}!</h3>
+                    <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                        <User size={20} color="white" />
+                      </div>
+                      Welcome, {customerEmail.split('@')[0]}!
+                    </h3>
                     <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-slate-500'}`}>{customerEmail}</p>
                   </div>
-                  <button className="border-2 border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full font-bold transition-all hover:border-blue-500" onClick={handleLogout}>Logout</button>
+                  <button className="border-2 border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full font-bold transition-all hover:border-red-500 hover:text-red-500" onClick={handleLogout}>
+                    Logout
+                  </button>
                 </div>
                 
                 <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 mb-4 flex-wrap">
@@ -364,7 +385,7 @@ function LandingPage() {
                     return (
                       <button 
                         key={tab.id} 
-                        className={`cursor-pointer font-medium px-4 py-2 transition-all flex items-center gap-1 ${activeCustomerTab === tab.id ? 'text-blue-500 border-b-2 border-blue-500' : ''}`} 
+                        className={`cursor-pointer font-medium px-4 py-2 transition-all flex items-center gap-2 rounded-t-lg ${activeCustomerTab === tab.id ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' : ''}`} 
                         onClick={() => setActiveCustomerTab(tab.id)}
                       >
                         <IconComponent size={16} /> {tab.label}
@@ -374,38 +395,59 @@ function LandingPage() {
                 </div>
 
                 {activeCustomerTab === "deliveries" && (
-                  <div>
+                  <div className="max-h-[400px] overflow-y-auto space-y-3">
                     {customerDeliveries.length === 0 ? (
-                      <p className="text-center opacity-50 py-10">No deliveries found for this email. Please check with the sender.</p>
+                      <div className="text-center py-12">
+                        <Package size={48} className="mx-auto opacity-30 mb-3" />
+                        <p className="opacity-60">No deliveries found for this email.</p>
+                        <p className="text-xs opacity-40 mt-2">Please check with the sender.</p>
+                      </div>
                     ) : (
                       customerDeliveries.map(delivery => {
                         const badge = getStatusBadge(delivery.status);
                         const IconComponent = badge.icon;
                         return (
-                          <div key={delivery.id} className={`${darkMode ? 'bg-white/5' : 'bg-black/5'} rounded-xl p-4 mb-3 cursor-pointer transition-all hover:${darkMode ? 'bg-white/10' : 'bg-black/10'} hover:translate-x-1`} onClick={() => { setTrackedDelivery(delivery); setShowTrackModal(true); }}>
+                          <motion.div 
+                            key={delivery.id} 
+                            className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-4 cursor-pointer transition-all hover:${darkMode ? 'bg-white/10' : 'bg-gray-100'} hover:translate-x-1 border ${borderColor}`} 
+                            onClick={() => { setTrackedDelivery(delivery); setShowTrackModal(true); }}
+                            whileHover={{ scale: 1.01 }}
+                          >
                             <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
-                              <div><span className="font-mono font-semibold">{delivery.trackingId}</span></div>
-                              <span className={`px-3 py-1 rounded-full text-xs ${badge.bg} ${badge.color}`}>
+                              <div><span className="font-mono font-semibold text-sm">{delivery.trackingId}</span></div>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.color}`}>
                                 <IconComponent size={10} className="inline mr-1" />{badge.text}
                               </span>
                             </div>
-                            <div className={`text-xs opacity-60`}>From: {delivery.pickupAddress?.substring(0, 40)}...</div>
-                            <div className={`text-xs opacity-60`}>To: {delivery.dropoffAddress?.substring(0, 40)}...</div>
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div className="flex items-center gap-1">
+                                <MapPin size={12} className="text-blue-500" />
+                                <span className="opacity-70">From: {delivery.pickupAddress?.substring(0, 30)}...</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <LocateFixed size={12} className="text-purple-500" />
+                                <span className="opacity-70">To: {delivery.dropoffAddress?.substring(0, 30)}...</span>
+                              </div>
+                            </div>
                             {delivery.currentLocation && (
-                              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 rounded-full text-xs mt-2">
-                                <MapPin size={12} /> Current Package Location: {delivery.currentLocation}
+                              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full text-xs mt-3">
+                                <Navigation size={12} className="text-blue-500" />
+                                Current Location: {delivery.currentLocation}
                               </div>
                             )}
-                            <div className="flex justify-between text-xs mt-2">
-                              <span>Driver: {delivery.driverName || 'Assigning...'}</span>
-                              <span>${delivery.price || 25}</span>
+                            <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
+                              <div className="flex items-center gap-1">
+                                <Truck size={12} />
+                                <span>Driver: {delivery.driverName || 'Assigning...'}</span>
+                              </div>
+                              <div className="font-semibold">${delivery.price || 25}</div>
                             </div>
                             {delivery.receipt && (
-                              <button className="mt-3 border-2 border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:border-blue-500" onClick={(e) => { e.stopPropagation(); viewReceipt(delivery); }}>
+                              <button className="mt-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105" onClick={(e) => { e.stopPropagation(); viewReceipt(delivery); }}>
                                 <FileText size={12} className="inline mr-1" /> View Receipt
                               </button>
                             )}
-                          </div>
+                          </motion.div>
                         );
                       })
                     )}
@@ -421,32 +463,38 @@ function LandingPage() {
                         placeholder="Enter tracking ID" 
                         value={trackingId} 
                         onChange={(e) => setTrackingId(e.target.value)} 
+                        onKeyPress={(e) => e.key === 'Enter' && handleTrackPackage()}
                       />
                       <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold transition-all hover:-translate-y-1 hover:shadow-lg" onClick={handleTrackPackage}>
-                        Track
+                        Track Now
                       </button>
                     </div>
                     <div className="mt-5">
-                      <h4 className="font-bold mb-4">Your Recent Deliveries</h4>
-                      {customerDeliveries.slice(0, 3).map(delivery => {
-                        const badge = getStatusBadge(delivery.status);
-                        return (
-                          <div key={delivery.id} className={`${darkMode ? 'bg-white/5' : 'bg-black/5'} rounded-xl p-3 mb-2 cursor-pointer transition-all hover:${darkMode ? 'bg-white/10' : 'bg-black/10'}`} onClick={() => { setTrackedDelivery(delivery); setShowTrackModal(true); }}>
-                            <div className="flex justify-between items-center flex-wrap gap-2">
-                              <div>
-                                <span className="font-mono text-sm">{delivery.trackingId}</span>
-                                <div className={`text-xs opacity-50`}>{new Date(delivery.createdAt).toLocaleDateString()}</div>
+                      <h4 className="font-bold mb-3 flex items-center gap-2">
+                        <Clock size={16} className="text-blue-500" />
+                        Your Recent Deliveries
+                      </h4>
+                      <div className="space-y-2">
+                        {customerDeliveries.slice(0, 3).map(delivery => {
+                          const badge = getStatusBadge(delivery.status);
+                          return (
+                            <div key={delivery.id} className={`${darkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-xl p-3 cursor-pointer transition-all hover:${darkMode ? 'bg-white/10' : 'bg-gray-100'}`} onClick={() => { setTrackedDelivery(delivery); setShowTrackModal(true); }}>
+                              <div className="flex justify-between items-center flex-wrap gap-2">
+                                <div>
+                                  <span className="font-mono text-sm font-semibold">{delivery.trackingId}</span>
+                                  <div className={`text-xs opacity-50 mt-1`}>{new Date(delivery.createdAt).toLocaleDateString()}</div>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-xs ${badge.bg} ${badge.color}`}>{badge.text}</span>
                               </div>
-                              <span className={`px-2 py-1 rounded-full text-xs ${badge.bg} ${badge.color}`}>{badge.text}</span>
                             </div>
-                          </div>
-                        );
-                      })}
-                      {customerDeliveries.length > 3 && (
-                        <button className="w-full mt-3 border-2 border-gray-300 dark:border-gray-600 py-2 rounded-full font-bold transition-all hover:border-blue-500" onClick={() => setActiveCustomerTab("deliveries")}>
-                          View All ({customerDeliveries.length})
-                        </button>
-                      )}
+                          );
+                        })}
+                        {customerDeliveries.length > 3 && (
+                          <button className="w-full mt-3 border-2 border-gray-300 dark:border-gray-600 py-2 rounded-full font-bold transition-all hover:border-blue-500" onClick={() => setActiveCustomerTab("deliveries")}>
+                            View All ({customerDeliveries.length})
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -457,27 +505,34 @@ function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-8 relative z-10 bg-black/30" id="features">
+      <section className="py-24 px-4 sm:px-8 relative z-10" id="features">
         <div className="max-w-[1400px] mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-center mb-4">
-            Why Choose <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Cycle</span>?
-          </h2>
-          <p className={`text-center ${darkMode ? 'text-white/70' : 'text-slate-600'} mb-12 max-w-2xl mx-auto`}>
-            Experience the future of logistics with our cutting-edge features
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm mb-4">
+              <Award size={16} className="text-purple-500" />
+              <span className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Why Choose Us</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4">
+              Why Choose <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Cycle</span>?
+            </h2>
+            <p className={`text-center ${darkMode ? 'text-white/70' : 'text-slate-600'} max-w-2xl mx-auto`}>
+              Experience the future of logistics with our cutting-edge features and unmatched service quality
+            </p>
+          </motion.div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, idx) => {
               const IconComponent = feature.icon;
               return (
                 <motion.div 
                   key={idx} 
-                  className={`${cardBg} backdrop-blur-md p-6 rounded-2xl text-center transition-all duration-300 border ${borderColor} cursor-pointer hover:-translate-y-2 hover:border-blue-500/50`}
+                  className={`${cardBg} backdrop-blur-md p-6 rounded-2xl text-center transition-all duration-300 border ${borderColor} cursor-pointer group hover:-translate-y-2 hover:shadow-2xl`}
                   initial={{ opacity: 0, y: 30 }} 
                   whileInView={{ opacity: 1, y: 0 }} 
                   transition={{ delay: idx * 0.1 }} 
                   viewport={{ once: true }}
                 >
-                  <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-${feature.color}/20 to-transparent`}>
+                  <div className={`w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center bg-gradient-to-br from-${feature.color}/20 to-transparent group-hover:scale-110 transition-transform`}>
                     <IconComponent size={40} color={feature.color} />
                   </div>
                   <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
@@ -489,57 +544,101 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-8 relative z-10 bg-gradient-to-br from-blue-500/10 to-purple-600/10 text-center" id="contact">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4">
-          Need Help With <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Your Delivery</span>?
-        </h2>
-        <p className={`${darkMode ? 'text-white/70' : 'text-slate-600'} mb-8`}>Contact our support team for any assistance</p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold transition-all hover:-translate-y-1 hover:shadow-lg" onClick={() => window.location.href = "mailto:support@cycle.com"}>
-            <Mail size={18} className="inline mr-2" /> Email Support
-          </button>
-          <button className="border-2 border-gray-300 dark:border-gray-600 px-6 py-3 rounded-full font-bold transition-all hover:border-blue-500" onClick={() => alert("Call us: +1 (800) 123-4567")}>
-            <Phone size={18} className="inline mr-2" /> Call Us
-          </button>
+      {/* CTA Section - Email Only */}
+      <section className="py-24 px-4 sm:px-8 relative z-10" id="contact">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className={`${cardBg} backdrop-blur-md rounded-3xl p-12 border ${borderColor} shadow-2xl`}>
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center animate-pulse-glow">
+              <Mail size={40} color="white" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
+              Need Help With <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Your Delivery</span>?
+            </h2>
+            <p className={`${darkMode ? 'text-white/70' : 'text-slate-600'} mb-8 max-w-lg mx-auto`}>
+              Our customer support team is available 24/7 to assist you with any questions or concerns.
+            </p>
+            <div className="flex flex-col items-center gap-4">
+              <a 
+                href="mailto:cycle@gmail.com" 
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-all hover:-translate-y-2 hover:shadow-2xl"
+              >
+                <Mail size={24} /> cycle@gmail.com
+              </a>
+              <p className={`text-xs ${darkMode ? 'text-white/50' : 'text-slate-500'}`}>
+                ✉️ We typically respond within 2-4 hours
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-black/50 py-12 px-4 sm:px-8 relative z-10 text-white">
-        <div className="max-w-[1200px] mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 w-10 h-10 rounded-xl flex items-center justify-center">
-                <Truck size={20} />
+      <footer className="bg-black/80 backdrop-blur-xl py-12 px-4 sm:px-8 relative z-10 text-white mt-20">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 w-10 h-10 rounded-xl flex items-center justify-center">
+                  <Truck size={20} />
+                </div>
+                <div className="text-xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">CYCLE</div>
               </div>
-              <div className="text-xl font-extrabold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">CYCLE</div>
+              <p className="text-white/60 text-sm mb-4">Premium logistics platform delivering happiness worldwide since 2020.</p>
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0021.683-3.027 13.9 13.9 0 002.049-7.137c0-.21-.005-.418-.015-.626a9.946 9.946 0 002.44-2.524z"/></svg>
+                </div>
+              </div>
             </div>
-            <p className="text-white/70 text-sm">Global Logistics Platform</p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4">Quick Links</h4>
-            <div className="space-y-2 text-white/70">
-              <div><a onClick={() => scrollToSection('home')} className="cursor-pointer hover:text-white transition">Home</a></div>
-              <div><a onClick={() => scrollToSection('features')} className="cursor-pointer hover:text-white transition">Features</a></div>
-              <div><a onClick={() => scrollToSection('customer-portal')} className="cursor-pointer hover:text-white transition">Track Delivery</a></div>
+            
+            <div>
+              <h4 className="font-bold mb-4 text-lg">Quick Links</h4>
+              <div className="space-y-2 text-white/60">
+                <div><a onClick={() => scrollToSection('home')} className="cursor-pointer hover:text-white transition">Home</a></div>
+                <div><a onClick={() => scrollToSection('features')} className="cursor-pointer hover:text-white transition">Features</a></div>
+                <div><a onClick={() => scrollToSection('customer-portal')} className="cursor-pointer hover:text-white transition">Track Delivery</a></div>
+                <div><a onClick={() => scrollToSection('contact')} className="cursor-pointer hover:text-white transition">Contact Support</a></div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold mb-4 text-lg">Legal</h4>
+              <div className="space-y-2 text-white/60">
+                <div><a onClick={() => setShowPrivacyModal(true)} className="cursor-pointer hover:text-white transition">Privacy Policy</a></div>
+                <div><a onClick={() => setShowTermsModal(true)} className="cursor-pointer hover:text-white transition">Terms of Service</a></div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold mb-4 text-lg">Contact Info</h4>
+              <div className="space-y-3 text-white/60 text-sm">
+                <div className="flex items-center gap-2">
+                  <Mail size={16} /> cycle@gmail.com
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={16} /> 24/7 Support Available
+                </div>
+                <div className="flex items-center gap-2">
+                  <Globe size={16} /> Worldwide Delivery
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <h4 className="font-bold mb-4">Legal</h4>
-            <div className="space-y-2 text-white/70">
-              <div><a className="cursor-pointer hover:text-white transition">Privacy Policy</a></div>
-              <div><a className="cursor-pointer hover:text-white transition">Terms of Service</a></div>
-            </div>
+          
+          <div className="text-center pt-8 mt-8 border-t border-white/10 text-white/40 text-sm">
+            <p>&copy; 2025 Cycle Logistics. All rights reserved. | Premium Delivery Service</p>
           </div>
-        </div>
-        <div className="text-center pt-8 mt-8 border-t border-white/10 text-white/50 text-sm">
-          <p>&copy; 2025 Cycle Logistics. All rights reserved.</p>
         </div>
       </footer>
 
       {/* Scroll to Top */}
-      <div className={`fixed bottom-7 right-7 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer z-[1000] transition-all duration-300 hover:-translate-y-1 hover:scale-110 ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={scrollToTop}>
+      <div className={`fixed bottom-7 right-7 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer z-[1000] transition-all duration-300 hover:-translate-y-1 hover:scale-110 shadow-lg ${showScrollTop ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={scrollToTop}>
         <ArrowUp size={24} />
       </div>
 
@@ -547,24 +646,138 @@ function LandingPage() {
       <AnimatePresence>
         {showAdminLogin && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowAdminLogin(false)}>
-            <div className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-md w-full p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-md w-full p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">
-                <h3 className="text-xl font-bold flex items-center gap-2"><Shield size={20} /> Admin Access</h3>
-                <button onClick={() => setShowAdminLogin(false)} className="cursor-pointer text-2xl">✕</button>
+                <h3 className="text-xl font-bold flex items-center gap-2"><Shield size={20} className="text-purple-500" /> Admin Access</h3>
+                <button onClick={() => setShowAdminLogin(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               <div className="mb-4">
-                <label className="block mb-2 font-medium">Username</label>
-                <input type="text" placeholder="Enter username" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${borderColor} ${darkMode ? 'bg-white/10' : 'bg-white'} outline-none focus:border-blue-500`} />
+                <label className="block mb-2 font-medium text-sm">Username</label>
+                <input type="text" placeholder="Enter username" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${borderColor} ${darkMode ? 'bg-white/10' : 'bg-gray-50'} outline-none focus:border-blue-500 transition`} />
               </div>
               <div className="mb-5">
-                <label className="block mb-2 font-medium">Password</label>
-                <input type="password" placeholder="Enter password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${borderColor} ${darkMode ? 'bg-white/10' : 'bg-white'} outline-none focus:border-blue-500`} onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()} />
+                <label className="block mb-2 font-medium text-sm">Password</label>
+                <input type="password" placeholder="Enter password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${borderColor} ${darkMode ? 'bg-white/10' : 'bg-gray-50'} outline-none focus:border-blue-500 transition`} onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()} />
               </div>
               <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold transition-all hover:-translate-y-1 hover:shadow-lg" onClick={handleAdminLogin}>
                 Login as Admin
               </button>
               <p className="text-xs text-center mt-4 opacity-50">Demo: admin / admin123</p>
-            </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Privacy Policy Modal */}
+      <AnimatePresence>
+        {showPrivacyModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowPrivacyModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">
+                <h3 className="text-2xl font-bold flex items-center gap-2"><Lock size={24} className="text-blue-500" /> Privacy Policy</h3>
+                <button onClick={() => setShowPrivacyModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
+              </div>
+              <div className="space-y-4 text-sm leading-relaxed">
+                <div>
+                  <h4 className="font-bold text-lg mb-2">1. Information We Collect</h4>
+                  <p className="opacity-80">We collect information you provide directly to us, such as your name, email address, phone number, delivery addresses, and payment information when you create an account, place an order, or contact customer support.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">2. How We Use Your Information</h4>
+                  <p className="opacity-80">We use the information we collect to process your deliveries, communicate with you about your orders, improve our services, personalize your experience, and comply with legal obligations.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">3. Data Security</h4>
+                  <p className="opacity-80">We implement industry-standard security measures including encryption, secure servers, and regular security audits to protect your personal information from unauthorized access or disclosure.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">4. Information Sharing</h4>
+                  <p className="opacity-80">We do not sell your personal information. We may share your information with delivery partners, payment processors, or as required by law. All partners are bound by strict confidentiality agreements.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">5. Your Rights</h4>
+                  <p className="opacity-80">You have the right to access, correct, or delete your personal information. You can also opt-out of marketing communications at any time by clicking the unsubscribe link in our emails.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">6. Cookies</h4>
+                  <p className="opacity-80">We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. You can control cookie settings through your browser preferences.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">7. Updates to This Policy</h4>
+                  <p className="opacity-80">We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the effective date.</p>
+                </div>
+                <div className="bg-blue-500/10 p-4 rounded-lg mt-4">
+                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at privacy@cycle.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full font-medium hover:-translate-y-0.5 transition" onClick={() => setShowPrivacyModal(false)}>Close</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Terms of Service Modal */}
+      <AnimatePresence>
+        {showTermsModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowTermsModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">
+                <h3 className="text-2xl font-bold flex items-center gap-2"><FileText size={24} className="text-purple-500" /> Terms of Service</h3>
+                <button onClick={() => setShowTermsModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
+              </div>
+              <div className="space-y-4 text-sm leading-relaxed">
+                <div>
+                  <h4 className="font-bold text-lg mb-2">1. Acceptance of Terms</h4>
+                  <p className="opacity-80">By accessing or using Cycle Logistics services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">2. Service Description</h4>
+                  <p className="opacity-80">Cycle Logistics provides package delivery and logistics services including pickup, transportation, tracking, and delivery of packages to specified destinations within our service area.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">3. User Responsibilities</h4>
+                  <p className="opacity-80">You agree to provide accurate and complete information for all deliveries. You are responsible for ensuring that packages comply with all applicable laws and regulations and do not contain prohibited items.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">4. Prohibited Items</h4>
+                  <p className="opacity-80">The following items are strictly prohibited: illegal substances, hazardous materials, flammable liquids, explosives, weapons, perishable goods without proper packaging, live animals, and any items prohibited by law.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">5. Delivery Estimates</h4>
+                  <p className="opacity-80">Delivery time estimates are provided as a courtesy and are not guaranteed. Actual delivery times may vary due to weather, traffic, customs, or other unforeseen circumstances.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">6. Liability and Insurance</h4>
+                  <p className="opacity-80">Cycle Logistics provides insurance coverage up to $100 per package unless additional insurance is purchased. We are not liable for delays, lost packages due to incorrect addresses, or damages caused by improper packaging.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">7. Payment Terms</h4>
+                  <p className="opacity-80">All payments must be made in full at the time of service. We accept credit cards, debit cards, and other payment methods as indicated on our platform. Late payments may incur additional fees.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">8. Cancellation and Refunds</h4>
+                  <p className="opacity-80">Orders can be cancelled within 1 hour of placement for a full refund. After pickup, refunds are subject to review on a case-by-case basis. Contact support for assistance.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">9. Account Termination</h4>
+                  <p className="opacity-80">We reserve the right to suspend or terminate accounts that violate these terms, engage in fraudulent activity, or misuse our services.</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">10. Changes to Terms</h4>
+                  <p className="opacity-80">We may modify these terms at any time. Continued use of our services after changes constitutes acceptance of the new terms.</p>
+                </div>
+                <div className="bg-purple-500/10 p-4 rounded-lg mt-4">
+                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at legal@cycle.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full font-medium hover:-translate-y-0.5 transition" onClick={() => setShowTermsModal(false)}>Close</button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -572,22 +785,25 @@ function LandingPage() {
       {/* Tracking Modal */}
       <AnimatePresence>
         {showTrackModal && trackedDelivery && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowTrackModal(false)}>
-            <div className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-md w-full max-h-[80vh] overflow-auto p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowTrackModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-md w-full max-h-[85vh] overflow-auto p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-bold">Delivery Status</h3>
-                <button onClick={() => setShowTrackModal(false)} className="cursor-pointer text-2xl">✕</button>
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Package size={24} className="text-blue-500" />
+                  Delivery Status
+                </h3>
+                <button onClick={() => setShowTrackModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
-              <div className="text-center p-5 bg-blue-500/10 rounded-xl mb-5">
-                <div className="font-mono text-sm mb-2">{trackedDelivery.trackingId}</div>
-                <div className={`inline-block px-3 py-1 rounded-full text-xs ${getStatusBadge(trackedDelivery.status).bg} ${getStatusBadge(trackedDelivery.status).color}`}>
+              <div className="text-center p-5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl mb-5">
+                <div className="font-mono text-lg font-bold mb-2">{trackedDelivery.trackingId}</div>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${getStatusBadge(trackedDelivery.status).bg} ${getStatusBadge(trackedDelivery.status).color}`}>
                   {getStatusBadge(trackedDelivery.status).text}
                 </div>
               </div>
 
               {trackedDelivery.currentLocation && (
-                <div className="mb-5 p-4 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                <div className="mb-5 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
                   <div className="flex items-center gap-2 mb-2">
                     <LocateFixed size={18} className="text-blue-500" />
                     <strong className="text-sm">Current Package Location</strong>
@@ -602,30 +818,52 @@ function LandingPage() {
               )}
 
               <div className="mb-5">
-                <h4 className="text-sm font-bold mb-3">Tracking Progress</h4>
-                <div className="flex justify-between flex-wrap gap-2">
-                  {['Order', 'Driver', 'Pickup', 'Transit', 'Delivered'].map((label, idx) => {
-                    const statuses = ['pending', 'assigned', 'picked_up', 'in_transit', 'delivered'];
-                    const isCompleted = idx <= statuses.indexOf(trackedDelivery.status);
-                    return (
-                      <div key={idx} className="text-center flex-1">
-                        <div className={`w-8 h-8 mx-auto mb-1 rounded-full ${isCompleted ? 'bg-emerald-500' : 'bg-white/20'} flex items-center justify-center`}>
-                          {isCompleted && <CheckCircle size={16} color="white" />}
+                <h4 className="text-sm font-bold mb-4">Tracking Progress</h4>
+                <div className="relative">
+                  <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                  <div className="relative flex justify-between">
+                    {[
+                      { label: "Order", status: "pending", icon: FileText },
+                      { label: "Driver", status: "assigned", icon: UserCheck },
+                      { label: "Pickup", status: "picked_up", icon: Package },
+                      { label: "Transit", status: "in_transit", icon: Truck },
+                      { label: "Delivered", status: "delivered", icon: CheckCircle }
+                    ].map((step, idx) => {
+                      const statuses = ['pending', 'assigned', 'picked_up', 'in_transit', 'delivered'];
+                      const isCompleted = idx <= statuses.indexOf(trackedDelivery.status);
+                      const IconComp = step.icon;
+                      return (
+                        <div key={idx} className="text-center z-10">
+                          <div className={`w-8 h-8 rounded-full ${isCompleted ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center mx-auto mb-2 shadow-md`}>
+                            <IconComp size={14} color="white" />
+                          </div>
+                          <div className="text-[10px] font-medium">{step.label}</div>
                         </div>
-                        <div className="text-[10px]">{label}</div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               <div className="mb-5">
                 <h4 className="text-sm font-bold mb-3">Delivery Details</h4>
-                <div className="text-sm space-y-1">
-                  <div><strong>Pickup:</strong> {trackedDelivery.pickupAddress}</div>
-                  <div><strong>Dropoff:</strong> {trackedDelivery.dropoffAddress}</div>
-                  <div><strong>Driver:</strong> {trackedDelivery.driverName || 'Assigning...'}</div>
-                  <div><strong>Est. Delivery:</strong> {new Date(trackedDelivery.estimatedDelivery).toLocaleDateString()}</div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-blue-500 mt-0.5" />
+                    <div><strong>Pickup:</strong> {trackedDelivery.pickupAddress}</div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <LocateFixed size={14} className="text-purple-500 mt-0.5" />
+                    <div><strong>Dropoff:</strong> {trackedDelivery.dropoffAddress}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Truck size={14} className="text-green-500" />
+                    <div><strong>Driver:</strong> {trackedDelivery.driverName || 'Assigning...'}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar size={14} className="text-orange-500" />
+                    <div><strong>Est. Delivery:</strong> {new Date(trackedDelivery.estimatedDelivery).toLocaleDateString()}</div>
+                  </div>
                 </div>
               </div>
 
@@ -634,7 +872,7 @@ function LandingPage() {
                   <FileText size={16} className="inline mr-2" /> View Receipt
                 </button>
               )}
-            </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -642,11 +880,11 @@ function LandingPage() {
       {/* Receipt Modal */}
       <AnimatePresence>
         {showReceiptModal && selectedReceipt && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowReceiptModal(false)}>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowReceiptModal(false)}>
             <div className={`${darkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl max-w-md w-full p-6 ${textColor}`} onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">
                 <h3 className="text-xl font-bold flex items-center gap-2"><FileText size={20} /> Delivery Receipt</h3>
-                <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl">✕</button>
+                <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
               {/* Hidden receipt template for PNG capture */}
@@ -655,7 +893,7 @@ function LandingPage() {
                   <div className="text-center mb-5 border-b-2 border-black pb-3">
                     <div className="text-2xl font-bold">CYCLE LOGISTICS</div>
                     <div className="text-[9px]">Global Delivery Services</div>
-                    <div className="text-[8px]">www.cycle.com | support@cycle.com</div>
+                    <div className="text-[8px]">cycle@gmail.com | premium@cycle.com</div>
                   </div>
                   <div className="text-center mb-4">
                     <div className="text-sm font-bold bg-gray-100 inline-block px-3 py-1 rounded">OFFICIAL DELIVERY RECEIPT</div>
@@ -747,6 +985,10 @@ function LandingPage() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
         }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.05); }
+        }
         .animate-float {
           animation: float 20s infinite ease-in-out;
         }
@@ -755,6 +997,9 @@ function LandingPage() {
         }
         .animate-float-slow {
           animation: float 25s infinite ease-in-out 10s;
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 8s infinite ease-in-out;
         }
         .animate-blink {
           animation: blink 1s infinite;
