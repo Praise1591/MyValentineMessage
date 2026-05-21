@@ -6,23 +6,23 @@ import AdminDashboard from "./components/pages/admin/AdminDashboard";
 // Protected Admin Route
 const AdminRoute = ({ children }) => {
   const isAdminAuthenticated = localStorage.getItem("admin_authenticated") === "true";
-  return isAdminAuthenticated ? children : <Navigate to="/MyValentineMessage" />;
+  return isAdminAuthenticated ? children : <Navigate to="/" />;
 };
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/MyValentineMessage" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route 
-          path="/MyValentineMessage/admin/dashboard" 
+          path="/admin/dashboard" 
           element={
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
           } 
         />
-        <Route path="*" element={<Navigate to="/MyValentineMessage" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

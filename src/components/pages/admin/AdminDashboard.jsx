@@ -14,7 +14,8 @@ import {
   FileText, CreditCard, Wallet, Send, MapPinIcon, Compass, QrCode,
   Copy, ExternalLink, Info, HelpCircle, Maximize2, Minimize2, Sparkles,
   Cloud, Wifi, Battery, Signal, Fingerprint, Lock, Key, Gift, Heart,
-  LocateFixed, Navigation2, Route as RouteIcon
+  LocateFixed, Navigation2, Route as RouteIcon, PartyPopper, Rocket,
+  TrendingUp as TrendingUpIcon, Users as UsersIcon, ShoppingBag, Briefcase
 } from "lucide-react";
 
 function AdminDashboard() {
@@ -28,6 +29,7 @@ function AdminDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showReceiptInfoModal, setShowReceiptInfoModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
@@ -37,6 +39,8 @@ function AdminDashboard() {
   const [assignDriverEmail, setAssignDriverEmail] = useState("");
   const [customLocation, setCustomLocation] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebratingDelivery, setCelebratingDelivery] = useState(null);
   const [receiptCounter, setReceiptCounter] = useState(() => {
     const saved = localStorage.getItem("receipt_counter");
     return saved ? parseInt(saved) : 1001;
@@ -70,6 +74,14 @@ function AdminDashboard() {
     dropoffAddress: "", packageWeight: "", packageDescription: "", itemName: "", quantity: 1, unitPrice: 25
   });
 
+  // Quick stats for dashboard
+  const [quickStats, setQuickStats] = useState({
+    todayDeliveries: 0,
+    weeklyRevenue: 0,
+    avgDeliveryTime: "2.5 hours",
+    customerSatisfaction: "98%"
+  });
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
@@ -79,13 +91,33 @@ function AdminDashboard() {
     loadData();
     loadNotifications();
     generateMockData();
+    calculateQuickStats();
   }, []);
+
+  const calculateQuickStats = () => {
+    const today = new Date().toDateString();
+    const todayDeliveries = deliveries.filter(d => 
+      new Date(d.createdAt).toDateString() === today
+    ).length;
+    
+    const weeklyRevenue = deliveries
+      .filter(d => d.status === "delivered")
+      .reduce((sum, d) => sum + (d.price || 25), 0);
+    
+    setQuickStats({
+      todayDeliveries,
+      weeklyRevenue,
+      avgDeliveryTime: "2.5 hours",
+      customerSatisfaction: "98%"
+    });
+  };
 
   const generateMockData = () => {
     setRecentActivity([
       { id: 1, type: "delivery", action: "created", user: "John Smith", time: "5 min ago", icon: Package, color: "#10b981" },
       { id: 2, type: "driver", action: "approved", user: "Mike Driver", time: "1 hour ago", icon: UserCheck, color: "#3b82f6" },
-      { id: 3, type: "delivery", action: "completed", user: "Sarah Johnson", time: "2 hours ago", icon: CheckCircle, color: "#10b981" }
+      { id: 3, type: "delivery", action: "completed", user: "Sarah Johnson", time: "2 hours ago", icon: CheckCircle, color: "#10b981" },
+      { id: 4, type: "delivery", action: "in transit", user: "David Wilson", time: "3 hours ago", icon: Truck, color: "#8b5cf6" }
     ]);
   };
 
@@ -110,21 +142,24 @@ function AdminDashboard() {
       setDeliveries(allDeliveries);
     }
     
+    calculateQuickStats();
     setLoading(false);
   };
 
   const generateDemoDeliveries = () => {
-    const customersList = ["John Smith", "Sarah Johnson", "Michael Brown", "Emily Davis"];
-    const customerEmails = ["john@example.com", "sarah@example.com", "michael@example.com", "emily@example.com"];
+    const customersList = ["John Smith", "Sarah Johnson", "Michael Brown", "Emily Davis", "Robert Wilson", "Lisa Anderson"];
+    const customerEmails = ["john@example.com", "sarah@example.com", "michael@example.com", "emily@example.com", "robert@example.com", "lisa@example.com"];
     const addresses = [
       "123 Main St, Downtown, NY 10001",
       "456 Oak Ave, Uptown, NY 10002",
       "789 Pine St, Westside, NY 10003",
-      "321 Elm Blvd, Eastside, NY 10004"
+      "321 Elm Blvd, Eastside, NY 10004",
+      "555 Maple Dr, Northside, NY 10005",
+      "777 Cedar Ln, Southside, NY 10006"
     ];
     const statuses = ["pending", "assigned", "picked_up", "in_transit", "delivered"];
     const weights = ["Light", "Medium", "Heavy"];
-    const items = ["Smartphone", "Laptop", "Books", "Clothing"];
+    const items = ["Smartphone", "Laptop", "Books", "Clothing", "Electronics", "Furniture"];
     
     return addresses.map((addr, index) => ({
       id: Date.now() + index,
@@ -148,14 +183,18 @@ function AdminDashboard() {
       updatedAt: new Date().toISOString(),
       deliveredAt: index < 2 ? new Date(Date.now() - index * 86400000).toISOString() : null,
       estimatedDelivery: new Date(Date.now() + (index + 1) * 86400000).toISOString(),
-      currentLocation: null
+      currentLocation: null,
+      receiptGenerated: false,
+      priority: index % 2 === 0 ? "Normal" : "Express"
     }));
   };
 
   const loadNotifications = () => {
     const demoNotifications = [
       { id: 1, message: "New driver registration pending approval", time: "5 min ago", read: false, type: "warning" },
-      { id: 2, message: "Delivery completed successfully", time: "1 hour ago", read: true, type: "success" }
+      { id: 2, message: "Delivery completed successfully 🎉", time: "1 hour ago", read: true, type: "success" },
+      { id: 3, message: "Peak hour traffic expected", time: "2 hours ago", read: false, type: "info" },
+      { id: 4, message: "Weekly report ready", time: "1 day ago", read: true, type: "success" }
     ];
     setNotifications(demoNotifications);
   };
@@ -175,76 +214,114 @@ function AdminDashboard() {
   };
 
   const generateAndDownloadReceipt = async () => {
+    if (selectedDelivery.receiptGenerated) {
+      toast.error("Receipt has already been generated for this delivery.");
+      setShowReceiptInfoModal(false);
+      return;
+    }
+
     if (!receiptInfo.pickupTime || !receiptInfo.estimatedDelivery || !receiptInfo.price || !receiptInfo.itemPrice || !receiptInfo.arrivalDate) {
-      toast.error("Please fill in all receipt information");
+      toast.error("Please fill in all receipt information fields");
       return;
     }
     
-    const newReceiptNumber = receiptCounter + 1;
-    setReceiptCounter(newReceiptNumber);
-    localStorage.setItem("receipt_counter", newReceiptNumber.toString());
+    if (!selectedDelivery) {
+      toast.error("No delivery selected");
+      return;
+    }
     
-    const receipt = {
-      receiptId: `RCP-${newReceiptNumber}`,
-      trackingId: selectedDelivery.trackingId,
-      customerName: selectedDelivery.customerName,
-      customerEmail: selectedDelivery.customerEmail,
-      pickupAddress: selectedDelivery.pickupAddress,
-      dropoffAddress: selectedDelivery.dropoffAddress,
-      packageWeight: selectedDelivery.packageWeight,
-      packageDescription: selectedDelivery.packageDescription,
-      itemName: selectedDelivery.itemName,
-      quantity: selectedDelivery.quantity,
-      unitPrice: receiptInfo.itemPrice,
-      price: receiptInfo.price,
-      pickupTime: receiptInfo.pickupTime,
-      estimatedDelivery: receiptInfo.estimatedDelivery,
-      actualDelivery: receiptInfo.actualDelivery || receiptInfo.estimatedDelivery,
-      arrivalDate: receiptInfo.arrivalDate,
-      driverNote: receiptInfo.driverNote || "Package handled with care",
-      driverName: selectedDelivery.driverName,
-      date: new Date().toISOString(),
-      trackingUrl: `https://cycle.com/track/${selectedDelivery.trackingId}`
-    };
-    
-    setReceiptData(receipt);
-    setShowReceiptInfoModal(false);
-    setShowReceiptModal(true);
-    
-    setTimeout(async () => {
-      if (receiptRef.current) {
-        try {
-          const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: '#ffffff' });
-          const imageUrl = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.download = `Cycle_Receipt_${receipt.receiptId}.png`;
-          link.href = imageUrl;
-          link.click();
-          toast.success(`Receipt ${receipt.receiptId} generated!`);
-          
-          const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-          const index = allDeliveries.findIndex(d => d.id === selectedDelivery.id);
-          if (index !== -1) {
-            allDeliveries[index].receipt = receipt;
-            allDeliveries[index].receiptSent = true;
-            allDeliveries[index].status = "in_transit";
-            localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
+    try {
+      const newReceiptNumber = receiptCounter + 1;
+      setReceiptCounter(newReceiptNumber);
+      localStorage.setItem("receipt_counter", newReceiptNumber.toString());
+      
+      const receipt = {
+        receiptId: `RCP-${newReceiptNumber}`,
+        trackingId: selectedDelivery.trackingId,
+        customerName: selectedDelivery.customerName,
+        customerEmail: selectedDelivery.customerEmail,
+        pickupAddress: selectedDelivery.pickupAddress,
+        dropoffAddress: selectedDelivery.dropoffAddress,
+        packageWeight: selectedDelivery.packageWeight,
+        packageDescription: selectedDelivery.packageDescription,
+        itemName: selectedDelivery.itemName,
+        quantity: selectedDelivery.quantity,
+        unitPrice: parseFloat(receiptInfo.itemPrice),
+        price: parseFloat(receiptInfo.price),
+        pickupTime: receiptInfo.pickupTime,
+        estimatedDelivery: receiptInfo.estimatedDelivery,
+        actualDelivery: receiptInfo.actualDelivery || receiptInfo.estimatedDelivery,
+        arrivalDate: receiptInfo.arrivalDate,
+        driverNote: receiptInfo.driverNote || "Package handled with care",
+        driverName: selectedDelivery.driverName || "Assigned Driver",
+        date: new Date().toISOString(),
+        trackingUrl: `https://cycle.com/track/${selectedDelivery.trackingId}`
+      };
+      
+      setReceiptData(receipt);
+      setShowReceiptInfoModal(false);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setShowReceiptModal(true);
+      
+      setTimeout(async () => {
+        if (receiptRef.current) {
+          try {
+            toast.loading("Generating receipt image...", { id: "receipt-gen" });
+            const canvas = await html2canvas(receiptRef.current, { 
+              scale: 2, 
+              backgroundColor: '#ffffff',
+              logging: false,
+              useCORS: true
+            });
+            const imageUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `Cycle_Receipt_${receipt.receiptId}.png`;
+            link.href = imageUrl;
+            link.click();
+            toast.success(`Receipt ${receipt.receiptId} generated!`, { id: "receipt-gen" });
+            
+            const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
+            const index = allDeliveries.findIndex(d => d.id === selectedDelivery.id);
+            if (index !== -1) {
+              allDeliveries[index].receipt = receipt;
+              allDeliveries[index].receiptSent = true;
+              allDeliveries[index].receiptGenerated = true;
+              allDeliveries[index].status = "in_transit";
+              localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
+            }
+            loadData();
+          } catch (error) {
+            console.error('Error generating receipt:', error);
+            toast.error('Failed to generate receipt.', { id: "receipt-gen" });
           }
-          loadData();
-        } catch (error) {
-          toast.error('Failed to generate receipt');
+        } else {
+          toast.error('Receipt reference not found', { id: "receipt-gen" });
         }
-      }
-    }, 500);
+      }, 500);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to generate receipt');
+    }
   };
 
   const openReceiptModal = (delivery) => {
+    if (delivery.receiptGenerated || delivery.receipt) {
+      toast.error("Receipt already generated for this delivery.");
+      return;
+    }
+    
     setSelectedDelivery(delivery);
+    const now = new Date();
+    const pickupTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const estimatedTime = new Date(now.getTime() + 2 * 60 * 60 * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const arrivalDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     setReceiptInfo({
-      pickupTime: new Date().toLocaleTimeString(),
-      estimatedDelivery: new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleTimeString(),
+      pickupTime: pickupTime,
+      estimatedDelivery: estimatedTime,
       actualDelivery: "",
-      arrivalDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      arrivalDate: arrivalDate,
       price: delivery.price || 25,
       itemPrice: delivery.unitPrice || 25,
       driverNote: ""
@@ -266,7 +343,7 @@ function AdminDashboard() {
       allDeliveries[index].status = "assigned";
       localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
       loadData();
-      toast.success(`${assignDriverName} assigned to delivery!`);
+      toast.success(`✅ ${assignDriverName} assigned to delivery!`);
       setShowAssignModal(false);
       setAssignDriverName("");
       setAssignDriverEmail("");
@@ -290,8 +367,8 @@ function AdminDashboard() {
       password: "password123",
       userType: "driver",
       status: "active",
-      vehicle: driverForm.vehicle,
-      licensePlate: driverForm.licensePlate,
+      vehicle: driverForm.vehicle || "Motorcycle",
+      licensePlate: driverForm.licensePlate || "ABC-123",
       createdAt: new Date().toISOString(),
       deliveriesCompleted: 0,
       rating: 5.0
@@ -302,7 +379,7 @@ function AdminDashboard() {
     loadData();
     setShowDriverModal(false);
     setDriverForm({ name: "", email: "", vehicle: "", licensePlate: "", address: "" });
-    toast.success(`${driverForm.name} added successfully!`);
+    toast.success(`🎉 ${driverForm.name} added successfully!`);
   };
 
   const handleDeleteDriver = (driverId) => {
@@ -334,7 +411,7 @@ function AdminDashboard() {
       dropoffAddress: deliveryForm.dropoffAddress,
       packageWeight: deliveryForm.packageWeight || "Standard",
       packageDescription: deliveryForm.packageDescription || "General package",
-      itemName: deliveryForm.itemName || deliveryForm.packageDescription,
+      itemName: deliveryForm.itemName || deliveryForm.packageDescription || "Package",
       quantity: deliveryForm.quantity || 1,
       unitPrice: deliveryForm.unitPrice || 25,
       status: "pending",
@@ -344,7 +421,9 @@ function AdminDashboard() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 3 * 86400000).toISOString(),
-      currentLocation: null
+      currentLocation: null,
+      receiptGenerated: false,
+      priority: "Normal"
     };
     
     const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
@@ -353,7 +432,7 @@ function AdminDashboard() {
     loadData();
     setShowDeliveryModal(false);
     setDeliveryForm({ customerName: "", customerEmail: "", customerPhone: "", pickupAddress: "", dropoffAddress: "", packageWeight: "", packageDescription: "", itemName: "", quantity: 1, unitPrice: 25 });
-    toast.success(`Delivery created! Tracking ID: ${newTrackingId}`);
+    toast.success(`📦 Delivery created! Tracking ID: ${newTrackingId}`);
   };
 
   const handleApproveDriver = (driverId) => {
@@ -363,7 +442,7 @@ function AdminDashboard() {
       allUsers[index].status = "active";
       localStorage.setItem("cycle_users", JSON.stringify(allUsers));
       loadData();
-      toast.success(`${allUsers[index].name} approved!`);
+      toast.success(`✅ ${allUsers[index].name} approved!`);
     }
   };
 
@@ -373,6 +452,12 @@ function AdminDashboard() {
     if (index !== -1) {
       allDeliveries[index].status = newStatus;
       allDeliveries[index].updatedAt = new Date().toISOString();
+      if (newStatus === "delivered") {
+        allDeliveries[index].deliveredAt = new Date().toISOString();
+        setCelebratingDelivery(allDeliveries[index]);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 5000);
+      }
       localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
       loadData();
       toast.success(successMessage);
@@ -416,519 +501,584 @@ function AdminDashboard() {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-[#0a0a0a]' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100'} flex`}>
       <Toaster position="top-right" />
       
-      {/* Floating Menu Button */}
+      {/* Celebration Animation */}
+      <AnimatePresence>
+        {showCelebration && celebratingDelivery && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[2000]"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center max-w-sm mx-4">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+                className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center"
+              >
+                <PartyPopper size={40} color="white" />
+              </motion.div>
+              <h3 className="text-2xl font-bold mb-2">🎉 Delivery Completed! 🎉</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Package for {celebratingDelivery.customerName} has been successfully delivered!
+              </p>
+              <p className="text-sm text-gray-500">Tracking: {celebratingDelivery.trackingId}</p>
+              <button 
+                onClick={() => setShowCelebration(false)}
+                className="mt-6 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium"
+              >
+                Awesome! 🚀
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Menu Button */}
       <button 
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 text-white border-none cursor-pointer flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-[90]"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-[90] md:hidden"
         onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 text-gray-800 dark:text-white transition-all duration-300 z-[1000] overflow-y-auto shadow-lg ${sidebarOpen ? 'w-[280px]' : 'w-0'} ${sidebarOpen ? 'opacity-100' : 'opacity-0'} overflow-hidden`}>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 text-center">
-          <div className="text-3xl font-bold mb-5">🚚 CYCLE</div>
-          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 mx-auto mb-4 flex items-center justify-center">
-            <Shield size={40} color="white" />
+      <div className={`fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 text-gray-800 dark:text-white transition-all duration-300 z-[1000] overflow-y-auto shadow-2xl
+        ${sidebarOpen ? 'w-[260px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-[70px]'} 
+        md:w-[70px] hover:md:w-[260px] group/sidebar transition-all duration-300`}>
+        
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 text-center overflow-hidden">
+          <div className={`text-2xl font-bold mb-3 transition-all ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            🚚 CYCLE
           </div>
-          <div className="font-semibold">Administrator</div>
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 mx-auto mb-2 flex items-center justify-center shadow-lg">
+            <Shield size={24} color="white" />
+          </div>
+          <div className={`font-semibold text-xs transition-all ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            Admin Panel
+          </div>
           <button 
             onClick={() => setDarkMode(!darkMode)} 
-            className="mt-3 bg-transparent border-none cursor-pointer text-gray-800 dark:text-white hover:text-indigo-600 transition"
+            className={`mt-2 bg-transparent border-none cursor-pointer text-gray-800 dark:text-white hover:text-indigo-600 transition text-xs ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}
           >
-            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            {darkMode ? "☀️ Light" : "🌙 Dark"}
           </button>
         </div>
         
-        <div className="p-4">
+        <div className="p-2 space-y-1">
           {[
-            { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-            { id: "drivers", label: "Drivers", icon: Truck },
-            { id: "customers", label: "Customers", icon: Users },
-            { id: "deliveries", label: "Deliveries", icon: Package }
+            { id: "overview", label: "Dashboard", icon: LayoutDashboard, color: "text-indigo-500" },
+            { id: "drivers", label: "Drivers", icon: Truck, color: "text-blue-500" },
+            { id: "customers", label: "Customers", icon: Users, color: "text-green-500" },
+            { id: "deliveries", label: "Deliveries", icon: Package, color: "text-purple-500" }
           ].map(item => {
             const IconComponent = item.icon;
             return (
               <div 
                 key={item.id} 
                 onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }} 
-                className={`flex items-center gap-3 px-4 py-3 mb-2 rounded-xl cursor-pointer transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200
+                  ${activeTab === item.id 
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' 
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
               >
-                <IconComponent size={20} />
-                <span>{item.label}</span>
+                <IconComponent size={18} className={`min-w-[18px] ${activeTab !== item.id ? item.color : ''}`} />
+                <span className={`text-sm transition-all whitespace-nowrap ${sidebarOpen ? 'inline' : 'md:hidden group-hover/sidebar:inline'}`}>
+                  {item.label}
+                </span>
                 {item.id === "drivers" && pendingDrivers.length > 0 && (
-                  <span className="ml-auto bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px]">{pendingDrivers.length}</span>
+                  <span className={`ml-auto bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[9px] min-w-[18px] text-center ${sidebarOpen ? 'inline' : 'md:hidden group-hover/sidebar:inline'}`}>
+                    {pendingDrivers.length}
+                  </span>
                 )}
               </div>
             );
           })}
         </div>
         
-        {/* Updated Logout link with base URL */}
-        <div className="absolute bottom-5 left-5 right-5">
-          <a href="/MyValentineMessage" className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition no-underline">
-            <LogOut size={20} /> Logout
+        <div className={`absolute bottom-4 left-0 right-0 px-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+          <a href="/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition no-underline">
+            <LogOut size={18} /> 
+            <span className="text-sm whitespace-nowrap">Logout</span>
           </a>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'ml-[280px]' : 'ml-0'}`}>
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {activeTab === "overview" && "Dashboard"}
-            {activeTab === "drivers" && "Drivers"}
-            {activeTab === "customers" && "Customers"}
-            {activeTab === "deliveries" && "Deliveries"}
-          </h1>
-          <div className="flex gap-3 items-center">
-            <div className={`px-4 py-2 rounded-full text-sm ${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'} shadow-sm`}>
-              {currentTime.toLocaleTimeString()}
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'md:ml-[260px]' : 'ml-0 md:ml-[70px]'}`}>
+        <div className="p-3 sm:p-4 md:p-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                {activeTab === "overview" && "📊 Dashboard Overview"}
+                {activeTab === "drivers" && "🚚 Driver Management"}
+                {activeTab === "customers" && "👥 Customer Management"}
+                {activeTab === "deliveries" && "📦 Delivery Management"}
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Welcome back, Admin!</p>
             </div>
-            {(activeTab === "drivers" || activeTab === "deliveries") && (
-              <button 
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-1.5 hover:bg-indigo-700 transition"
-                onClick={() => activeTab === "drivers" ? setShowDriverModal(true) : setShowDeliveryModal(true)}
-              >
-                <Plus size={16} /> Add {activeTab === "drivers" ? "Driver" : "Order"}
-              </button>
-            )}
+            <div className="flex gap-2 items-center flex-wrap">
+              <div className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs ${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'} shadow-sm`}>
+                {currentTime.toLocaleTimeString()}
+              </div>
+              {(activeTab === "drivers" || activeTab === "deliveries") && (
+                <button 
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium flex items-center gap-1.5 hover:shadow-lg transition-all text-xs sm:text-sm"
+                  onClick={() => activeTab === "drivers" ? setShowDriverModal(true) : setShowDeliveryModal(true)}
+                >
+                  <Plus size={14} className="sm:w-4 sm:h-4" /> 
+                  <span className="hidden xs:inline">Add</span> {activeTab === "drivers" ? "Driver" : "Order"}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <DollarSign size={24} className="text-emerald-500" />
-                  </div>
-                  <span className="text-xs text-emerald-500">+12%</span>
-                </div>
-                <div className="text-3xl font-bold mb-1">${stats.revenue}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</div>
-              </div>
-              
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                    <Truck size={24} className="text-indigo-500" />
-                  </div>
-                  <span className="text-xs text-emerald-500">+5%</span>
-                </div>
-                <div className="text-3xl font-bold mb-1">{stats.inTransitDeliveries}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Active Deliveries</div>
-              </div>
-              
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                    <Users size={24} className="text-purple-500" />
-                  </div>
-                  <span className="text-xs text-emerald-500">+2</span>
-                </div>
-                <div className="text-3xl font-bold mb-1">{stats.totalDrivers}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Total Drivers</div>
-              </div>
-              
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <Target size={24} className="text-amber-500" />
-                  </div>
-                  <span className="text-xs text-emerald-500">+8%</span>
-                </div>
-                <div className="text-3xl font-bold mb-1">{stats.totalDeliveries > 0 ? Math.round((stats.completedDeliveries / stats.totalDeliveries) * 100) : 0}%</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Completion Rate</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <h3 className="text-base font-semibold mb-5">Recent Activity</h3>
-                {recentActivity.map(activity => {
-                  const IconComponent = activity.icon;
-                  return (
-                    <div key={activity.id} className="flex items-center gap-3 py-3 border-b border-gray-200 dark:border-gray-700 last:border-0">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center`} style={{ background: activity.color + '20' }}>
-                        <IconComponent size={16} color={activity.color} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm">{activity.user} {activity.action}</div>
-                        <div className="text-xs text-gray-500">{activity.time}</div>
-                      </div>
+          {/* Overview Tab */}
+          {activeTab === "overview" && (
+            <>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <motion.div whileHover={{ scale: 1.02 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 shadow-lg border-l-4 border-emerald-500`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <DollarSign size={16} className="sm:w-5 sm:h-5 text-emerald-500" />
                     </div>
-                  );
-                })}
+                    <span className="text-[10px] sm:text-xs text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full">+12%</span>
+                  </div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">${stats.revenue}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Total Revenue</div>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 shadow-lg border-l-4 border-blue-500`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <Truck size={16} className="sm:w-5 sm:h-5 text-blue-500" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">Active</span>
+                  </div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.inTransitDeliveries}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Active Deliveries</div>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 shadow-lg border-l-4 border-purple-500`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                      <Users size={16} className="sm:w-5 sm:h-5 text-purple-500" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-purple-500 bg-purple-50 px-1.5 py-0.5 rounded-full">Total</span>
+                  </div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.totalDrivers}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Active Drivers</div>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 shadow-lg border-l-4 border-amber-500`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Target size={16} className="sm:w-5 sm:h-5 text-amber-500" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full">Rate</span>
+                  </div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.totalDeliveries > 0 ? Math.round((stats.completedDeliveries / stats.totalDeliveries) * 100) : 0}%</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Completion Rate</div>
+                </motion.div>
               </div>
-            </div>
-          </>
-        )}
 
-        {/* Drivers Tab */}
-        {activeTab === "drivers" && (
-          <>
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-4 mb-6 flex gap-4 flex-wrap border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <Search size={18} className="text-gray-500 mt-2.5" />
-              <input 
-                type="text" 
-                placeholder="Search drivers..." 
-                className={`flex-1 px-4 py-2.5 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} 
-              />
-            </div>
-            
-            {pendingDrivers.length > 0 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl overflow-auto border ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-6`}>
-                <div className="px-5 py-4 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-                  <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-400">Pending Approval ({pendingDrivers.length})</h3>
+              {/* Quick Stats Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center shadow-md`}>
+                  <div className="text-lg sm:text-xl font-bold text-blue-500">{quickStats.todayDeliveries}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Today's Deliveries</div>
                 </div>
-                <table className="w-full border-collapse min-w-[800px]">
-                  <thead>
-                    <tr>
-                      <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Name</th>
-                      <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Email</th>
-                      <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Registered</th>
-                      <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingDrivers.map(driver => (
-                      <tr key={driver.id}>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm font-medium">{driver.name}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{driver.email}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{new Date(driver.createdAt).toLocaleDateString()}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">
-                          <button className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-600 transition" onClick={() => handleApproveDriver(driver.id)}>Approve</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center shadow-md`}>
+                  <div className="text-lg sm:text-xl font-bold text-green-500">${quickStats.weeklyRevenue}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Weekly Revenue</div>
+                </div>
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center shadow-md`}>
+                  <div className="text-lg sm:text-xl font-bold text-purple-500">{quickStats.avgDeliveryTime}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Avg Delivery Time</div>
+                </div>
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center shadow-md`}>
+                  <div className="text-lg sm:text-xl font-bold text-amber-500">{quickStats.customerSatisfaction}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500">Satisfaction</div>
+                </div>
               </div>
-            )}
 
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl overflow-auto border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <table className="w-full border-collapse min-w-[800px]">
-                <thead>
-                  <tr>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Driver</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Email</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Vehicle</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Rating</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {drivers.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase())).map(driver => (
-                    <tr key={driver.id}>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="font-semibold text-sm">{driver.name}</div>
-                        <div className="text-xs text-gray-500">ID: {driver.uniqueId}</div>
-                      </td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{driver.email}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{driver.vehicle || 'Motorcycle'} · {driver.licensePlate}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">
-                        <Star size={14} className="inline text-amber-500 mr-1" />{driver.rating || 4.8}
-                      </td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <button className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-600 transition" onClick={() => handleDeleteDriver(driver.id)}>Remove</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        {/* Customers Tab */}
-        {activeTab === "customers" && (
-          <>
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-4 mb-6 flex gap-4 flex-wrap border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <Search size={18} className="text-gray-500 mt-2.5" />
-              <input 
-                type="text" 
-                placeholder="Search customers..." 
-                className={`flex-1 px-4 py-2.5 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} 
-              />
-            </div>
-            
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl overflow-auto border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <table className="w-full border-collapse min-w-[800px]">
-                <thead>
-                  <tr>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Customer</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Email</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Address</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Orders</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customers.filter(c => c.name?.toLowerCase().includes(searchTerm.toLowerCase())).map(customer => (
-                    <tr key={customer.id}>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm font-semibold">{customer.name}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{customer.email}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{customer.address?.substring(0, 50)}...</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{deliveries.filter(d => d.customerName === customer.name).length}</td>
-                      <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">${deliveries.filter(d => d.customerName === customer.name).reduce((sum, d) => sum + (d.price || 25), 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        {/* Deliveries Tab */}
-        {activeTab === "deliveries" && (
-          <>
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-4 mb-6 flex gap-4 flex-wrap border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <Search size={18} className="text-gray-500 mt-2.5" />
-              <input 
-                type="text" 
-                placeholder="Search by tracking ID..." 
-                className={`flex-1 px-4 py-2.5 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} 
-              />
-              <select 
-                className={`px-4 py-2.5 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
-                value={statusFilter} 
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="assigned">Assigned</option>
-                <option value="in_transit">In Transit</option>
-                <option value="delivered">Delivered</option>
-              </select>
-            </div>
-            
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl overflow-auto border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <table className="w-full border-collapse min-w-[1000px]">
-                <thead>
-                  <tr>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Tracking ID</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Customer</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Item</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Status</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Driver</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Amount</th>
-                    <th className="text-left px-5 py-4 bg-gray-50 dark:bg-gray-900 font-semibold text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredDeliveries().map(delivery => {
-                    const badge = getStatusBadge(delivery.status);
-                    const IconComponent = badge.icon;
+              {/* Recent Activity */}
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-lg`}>
+                <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Activity size={20} className="text-indigo-500" />
+                  Recent Activity
+                </h3>
+                <div className="space-y-3">
+                  {recentActivity.map(activity => {
+                    const IconComponent = activity.icon;
                     return (
-                      <tr key={delivery.id}>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm font-mono font-semibold">{delivery.trackingId}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{delivery.customerName}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{delivery.itemName}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                          <span className={`px-3 py-1 rounded-full text-xs ${badge.bg} ${badge.color}`}>
-                            <IconComponent size={12} className="inline mr-1" />{badge.text}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">{delivery.driverName || '—'}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">${delivery.price}</td>
-                        <td className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                          <div className="flex gap-2 flex-wrap">
-                            {delivery.status === 'pending' && (
-                              <button className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-700 transition" onClick={() => { setSelectedDelivery(delivery); setShowAssignModal(true); }}>Assign</button>
-                            )}
-                            {delivery.status === 'assigned' && (
-                              <button className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-600 transition" onClick={() => updateDeliveryStatus(delivery.id, "picked_up", "Marked as Picked Up")}>Pick Up</button>
-                            )}
-                            {delivery.status === 'picked_up' && (
-                              <button className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-600 transition" onClick={() => updateDeliveryStatus(delivery.id, "in_transit", "Now In Transit")}>Start Transit</button>
-                            )}
-                            {delivery.status === 'in_transit' && (
-                              <>
-                                <button className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-600 transition" onClick={() => openReceiptModal(delivery)}>Receipt</button>
-                                <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium hover:border-indigo-500 transition" onClick={() => { setSelectedDelivery(delivery); setShowLocationModal(true); }}>
-                                  <MapPin size={12} className="inline mr-1" />Set Location
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                      <div key={activity.id} className="flex items-center gap-3 py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center`} style={{ background: activity.color + '20' }}>
+                          <IconComponent size={16} color={activity.color} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs sm:text-sm font-medium">{activity.user} {activity.action}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500">{activity.time}</div>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
+                </div>
+              </div>
+            </>
+          )}
 
-      {/* Add Driver Modal */}
-      <AnimatePresence>
-        {showDriverModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowDriverModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 border-b border-gray-200 dark:border-gray-700"><h3 className="text-lg font-bold">Add New Driver</h3></div>
-              <div className="p-5">
-                <input type="text" placeholder="Full Name" value={driverForm.name} onChange={(e) => setDriverForm({...driverForm, name: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="email" placeholder="Email" value={driverForm.email} onChange={(e) => setDriverForm({...driverForm, email: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="text" placeholder="Vehicle Type" value={driverForm.vehicle} onChange={(e) => setDriverForm({...driverForm, vehicle: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="text" placeholder="License Plate" value={driverForm.licensePlate} onChange={(e) => setDriverForm({...driverForm, licensePlate: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
+          {/* Drivers Tab - Mobile Responsive */}
+          {activeTab === "drivers" && (
+            <>
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex gap-3 flex-wrap shadow-md`}>
+                <Search size={16} className="text-gray-500 mt-2" />
+                <input 
+                  type="text" 
+                  placeholder="Search drivers..." 
+                  className={`flex-1 min-w-[150px] px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                />
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowDriverModal(false)}>Cancel</button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition" onClick={handleAddDriver}>Add Driver</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              
+              {pendingDrivers.length > 0 && (
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl overflow-auto border ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
+                  <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200">
+                    <h3 className="text-xs sm:text-sm font-semibold text-amber-800 dark:text-amber-400">⏳ Pending Approval ({pendingDrivers.length})</h3>
+                  </div>
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {pendingDrivers.map(driver => (
+                      <div key={driver.id} className="p-3 flex justify-between items-center flex-wrap gap-2">
+                        <div>
+                          <div className="font-semibold text-sm">{driver.name}</div>
+                          <div className="text-xs text-gray-500">{driver.email}</div>
+                        </div>
+                        <button className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-emerald-600 transition" onClick={() => handleApproveDriver(driver.id)}>
+                          Approve ✓
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-      {/* Add Delivery Modal */}
-      <AnimatePresence>
-        {showDeliveryModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowDeliveryModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 border-b border-gray-200 dark:border-gray-700"><h3 className="text-lg font-bold">Create Order</h3></div>
-              <div className="p-5">
-                <input type="text" placeholder="Customer Name" value={deliveryForm.customerName} onChange={(e) => setDeliveryForm({...deliveryForm, customerName: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="email" placeholder="Customer Email" value={deliveryForm.customerEmail} onChange={(e) => setDeliveryForm({...deliveryForm, customerEmail: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="text" placeholder="Item Name" value={deliveryForm.itemName} onChange={(e) => setDeliveryForm({...deliveryForm, itemName: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <div className="flex gap-3 mb-3">
-                  <input type="number" placeholder="Qty" value={deliveryForm.quantity} onChange={(e) => setDeliveryForm({...deliveryForm, quantity: parseInt(e.target.value) || 1})} className={`flex-1 px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                  <input type="number" placeholder="Unit Price" value={deliveryForm.unitPrice} onChange={(e) => setDeliveryForm({...deliveryForm, unitPrice: parseInt(e.target.value) || 25})} className={`flex-1 px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl overflow-hidden shadow-lg`}>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {drivers.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase())).map(driver => (
+                    <div key={driver.id} className="p-3 sm:p-4">
+                      <div className="flex justify-between items-start flex-wrap gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm sm:text-base">{driver.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">{driver.email}</div>
+                          <div className="text-xs text-gray-400 mt-1">🚗 {driver.vehicle || 'Motorcycle'} • 📋 {driver.uniqueId}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-amber-500">⭐ {driver.rating || 4.8}</span>
+                            <span className="text-xs text-gray-400">📦 {driver.deliveriesCompleted || 0} deliveries</span>
+                          </div>
+                        </div>
+                        <button className="bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium hover:bg-red-600 transition" onClick={() => handleDeleteDriver(driver.id)}>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <input type="text" placeholder="Pickup Address" value={deliveryForm.pickupAddress} onChange={(e) => setDeliveryForm({...deliveryForm, pickupAddress: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="text" placeholder="Dropoff Address" value={deliveryForm.dropoffAddress} onChange={(e) => setDeliveryForm({...deliveryForm, dropoffAddress: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowDeliveryModal(false)}>Cancel</button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition" onClick={handleAddDelivery}>Create Order</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </>
+          )}
 
-      {/* Assign Modal */}
-      <AnimatePresence>
-        {showAssignModal && selectedDelivery && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowAssignModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 bg-indigo-600 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Assign Driver</h3></div>
-              <div className="p-5">
-                <input type="text" placeholder="Driver Name" value={assignDriverName} onChange={(e) => setAssignDriverName(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 mb-3`} />
-                <input type="email" placeholder="Driver Email" value={assignDriverEmail} onChange={(e) => setAssignDriverEmail(e.target.value)} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
+          {/* Customers Tab - Mobile Responsive */}
+          {activeTab === "customers" && (
+            <>
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex gap-3 flex-wrap shadow-md`}>
+                <Search size={16} className="text-gray-500 mt-2" />
+                <input 
+                  type="text" 
+                  placeholder="Search customers..." 
+                  className={`flex-1 min-w-[150px] px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                />
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowAssignModal(false)}>Cancel</button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition" onClick={() => handleAssignDelivery(selectedDelivery.id)}>Assign</button>
+              
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl overflow-hidden shadow-lg`}>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {customers.filter(c => c.name?.toLowerCase().includes(searchTerm.toLowerCase())).map(customer => (
+                    <div key={customer.id} className="p-3 sm:p-4">
+                      <div className="flex justify-between items-start flex-wrap gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm sm:text-base">{customer.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">{customer.email}</div>
+                          <div className="text-xs text-gray-400 mt-1">📦 Orders: {deliveries.filter(d => d.customerName === customer.name).length}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-indigo-600">${deliveries.filter(d => d.customerName === customer.name).reduce((sum, d) => sum + (d.price || 25), 0)}</div>
+                          <div className="text-[10px] text-gray-500">Total Spent</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </>
+          )}
 
-      {/* Receipt Info Modal */}
-      <AnimatePresence>
-        {showReceiptInfoModal && selectedDelivery && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowReceiptInfoModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 bg-emerald-500 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Receipt Information</h3></div>
-              <div className="p-5">
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Pickup Time *</label>
-                  <input type="time" value={receiptInfo.pickupTime} onChange={(e) => setReceiptInfo({...receiptInfo, pickupTime: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
+          {/* Deliveries Tab - Mobile Responsive */}
+          {activeTab === "deliveries" && (
+            <>
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex flex-col sm:flex-row gap-3 shadow-md`}>
+                <div className="flex items-center gap-2 flex-1">
+                  <Search size={16} className="text-gray-500" />
+                  <input 
+                    type="text" 
+                    placeholder="Search by tracking ID..." 
+                    className={`flex-1 px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm`}
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                  />
                 </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Estimated Delivery *</label>
-                  <input type="time" value={receiptInfo.estimatedDelivery} onChange={(e) => setReceiptInfo({...receiptInfo, estimatedDelivery: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Actual Delivery</label>
-                  <input type="time" value={receiptInfo.actualDelivery} onChange={(e) => setReceiptInfo({...receiptInfo, actualDelivery: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Arrival Date *</label>
-                  <input type="date" value={receiptInfo.arrivalDate} onChange={(e) => setReceiptInfo({...receiptInfo, arrivalDate: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Item Price (per unit) *</label>
-                  <input type="number" placeholder="Amount" value={receiptInfo.itemPrice} onChange={(e) => setReceiptInfo({...receiptInfo, itemPrice: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Total Price *</label>
-                  <input type="number" placeholder="Amount" value={receiptInfo.price} onChange={(e) => setReceiptInfo({...receiptInfo, price: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500`} />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Driver Note</label>
-                  <textarea rows="3" value={receiptInfo.driverNote} onChange={(e) => setReceiptInfo({...receiptInfo, driverNote: e.target.value})} className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 resize-vertical`} />
-                </div>
+                <select 
+                  className={`px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white text-gray-900'} outline-none focus:border-indigo-500 text-sm w-full sm:w-32`}
+                  value={statusFilter} 
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="in_transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
+                </select>
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowReceiptInfoModal(false)}>Cancel</button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition" onClick={generateAndDownloadReceipt}>Generate Receipt</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Location Modal */}
-      <AnimatePresence>
-        {showLocationModal && selectedDelivery && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowLocationModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 bg-blue-500 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Update Package Location</h3></div>
-              <div className="p-5">
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium text-sm">Current Location</label>
-                  <textarea placeholder="Enter current location (e.g., 'At sorting facility', 'Out for delivery', 'Arriving at destination')" value={customLocation} onChange={(e) => setCustomLocation(e.target.value)} rows="4" className={`w-full px-4 py-3 rounded-xl border ${darkMode ? 'border-gray-700 bg-[#0a0a0a] text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 resize-vertical`} />
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-xs text-blue-800 dark:text-blue-300">
-                  📍 This location will be visible to the customer when tracking their package.
-                </div>
-                {selectedDelivery.currentLocation && (
-                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 mt-3">
-                    Current location: {selectedDelivery.currentLocation}
+              
+              <div className="space-y-3">
+                {getFilteredDeliveries().map(delivery => {
+                  const badge = getStatusBadge(delivery.status);
+                  const IconComponent = badge.icon;
+                  const hasReceipt = delivery.receiptGenerated || delivery.receipt;
+                  return (
+                    <motion.div 
+                      key={delivery.id} 
+                      whileHover={{ scale: 1.01 }}
+                      className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 shadow-lg border-l-4 ${delivery.priority === 'Express' ? 'border-red-500' : 'border-indigo-500'}`}
+                    >
+                      <div className="flex justify-between items-start flex-wrap gap-2 mb-2">
+                        <div>
+                          <div className="font-mono text-xs sm:text-sm font-bold">{delivery.trackingId}</div>
+                          <div className="text-xs text-gray-500 mt-1">{delivery.customerName}</div>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium ${badge.bg} ${badge.color}`}>
+                          <IconComponent size={10} className="inline mr-1" />{badge.text}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div className="flex items-center gap-1">
+                          <MapPin size={12} className="text-blue-500" />
+                          <span className="truncate">{delivery.pickupAddress?.substring(0, 25)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <LocateFixed size={12} className="text-purple-500" />
+                          <span className="truncate">{delivery.dropoffAddress?.substring(0, 25)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="text-sm font-bold text-indigo-600">${delivery.price}</div>
+                        <div className="flex gap-2">
+                          {delivery.status === 'pending' && (
+                            <button className="bg-indigo-600 text-white px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium hover:bg-indigo-700 transition" onClick={() => { setSelectedDelivery(delivery); setShowAssignModal(true); }}>Assign</button>
+                          )}
+                          {delivery.status === 'assigned' && (
+                            <button className="bg-amber-500 text-white px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium hover:bg-amber-600 transition" onClick={() => updateDeliveryStatus(delivery.id, "picked_up", "📦 Marked as Picked Up")}>Pick Up</button>
+                          )}
+                          {delivery.status === 'picked_up' && (
+                            <button className="bg-amber-500 text-white px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium hover:bg-amber-600 transition" onClick={() => updateDeliveryStatus(delivery.id, "in_transit", "🚚 Now In Transit")}>Start Transit</button>
+                          )}
+                          {delivery.status === 'in_transit' && (
+                            <div className="flex gap-1">
+                              <button 
+                                className={`${hasReceipt ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium transition`} 
+                                onClick={() => !hasReceipt && openReceiptModal(delivery)}
+                                disabled={hasReceipt}
+                              >
+                                {hasReceipt ? '✓ Receipt' : 'Receipt'}
+                              </button>
+                              <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium hover:border-indigo-500 transition" onClick={() => { setSelectedDelivery(delivery); setShowLocationModal(true); }}>
+                                <MapPin size={12} className="inline" />
+                              </button>
+                            </div>
+                          )}
+                          {delivery.status === 'delivered' && (
+                            <button className="bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium" disabled>
+                              ✓ Delivered
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+                {getFilteredDeliveries().length === 0 && (
+                  <div className="text-center py-12">
+                    <Package size={48} className="mx-auto opacity-30 mb-3" />
+                    <p className="text-gray-500">No deliveries found</p>
                   </div>
                 )}
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowLocationModal(false)}>Cancel</button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-50" onClick={() => updateDeliveryLocation(selectedDelivery.id, customLocation)} disabled={!customLocation.trim()}>Update Location</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* All Modals (kept same as before, just responsive) */}
+      <AnimatePresence>
+        {showDriverModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowDriverModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700"><h3 className="text-lg font-bold">Add New Driver</h3></div>
+              <div className="p-4 space-y-3">
+                <input type="text" placeholder="Full Name" value={driverForm.name} onChange={(e) => setDriverForm({...driverForm, name: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="email" placeholder="Email" value={driverForm.email} onChange={(e) => setDriverForm({...driverForm, email: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="text" placeholder="Vehicle Type" value={driverForm.vehicle} onChange={(e) => setDriverForm({...driverForm, vehicle: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="text" placeholder="License Plate" value={driverForm.licensePlate} onChange={(e) => setDriverForm({...driverForm, licensePlate: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+              </div>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm" onClick={() => setShowDriverModal(false)}>Cancel</button>
+                <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transition text-sm" onClick={handleAddDriver}>Add Driver</button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Receipt Modal */}
+      <AnimatePresence>
+        {showDeliveryModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowDeliveryModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700"><h3 className="text-lg font-bold">Create Order</h3></div>
+              <div className="p-4 space-y-3">
+                <input type="text" placeholder="Customer Name" value={deliveryForm.customerName} onChange={(e) => setDeliveryForm({...deliveryForm, customerName: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="email" placeholder="Customer Email" value={deliveryForm.customerEmail} onChange={(e) => setDeliveryForm({...deliveryForm, customerEmail: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="text" placeholder="Item Name" value={deliveryForm.itemName} onChange={(e) => setDeliveryForm({...deliveryForm, itemName: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Qty" value={deliveryForm.quantity} onChange={(e) => setDeliveryForm({...deliveryForm, quantity: parseInt(e.target.value) || 1})} className={`flex-1 px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                  <input type="number" placeholder="Unit Price" value={deliveryForm.unitPrice} onChange={(e) => setDeliveryForm({...deliveryForm, unitPrice: parseInt(e.target.value) || 25})} className={`flex-1 px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <input type="text" placeholder="Pickup Address" value={deliveryForm.pickupAddress} onChange={(e) => setDeliveryForm({...deliveryForm, pickupAddress: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="text" placeholder="Dropoff Address" value={deliveryForm.dropoffAddress} onChange={(e) => setDeliveryForm({...deliveryForm, dropoffAddress: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+              </div>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm" onClick={() => setShowDeliveryModal(false)}>Cancel</button>
+                <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transition text-sm" onClick={handleAddDelivery}>Create Order</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAssignModal && selectedDelivery && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowAssignModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Assign Driver</h3></div>
+              <div className="p-4 space-y-3">
+                <input type="text" placeholder="Driver Name" value={assignDriverName} onChange={(e) => setAssignDriverName(e.target.value)} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                <input type="email" placeholder="Driver Email" value={assignDriverEmail} onChange={(e) => setAssignDriverEmail(e.target.value)} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+              </div>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm" onClick={() => setShowAssignModal(false)}>Cancel</button>
+                <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transition text-sm" onClick={() => handleAssignDelivery(selectedDelivery.id)}>Assign Driver</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showReceiptInfoModal && selectedDelivery && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowReceiptInfoModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Receipt Information</h3></div>
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Pickup Time *</label>
+                  <input type="time" value={receiptInfo.pickupTime} onChange={(e) => setReceiptInfo({...receiptInfo, pickupTime: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Estimated Delivery *</label>
+                  <input type="time" value={receiptInfo.estimatedDelivery} onChange={(e) => setReceiptInfo({...receiptInfo, estimatedDelivery: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Arrival Date *</label>
+                  <input type="date" value={receiptInfo.arrivalDate} onChange={(e) => setReceiptInfo({...receiptInfo, arrivalDate: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Item Price (per unit) *</label>
+                  <input type="number" placeholder="Amount" value={receiptInfo.itemPrice} onChange={(e) => setReceiptInfo({...receiptInfo, itemPrice: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Total Price *</label>
+                  <input type="number" placeholder="Amount" value={receiptInfo.price} onChange={(e) => setReceiptInfo({...receiptInfo, price: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 text-sm`} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Driver Note</label>
+                  <textarea rows="2" value={receiptInfo.driverNote} onChange={(e) => setReceiptInfo({...receiptInfo, driverNote: e.target.value})} className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 resize-vertical text-sm`} />
+                </div>
+              </div>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm" onClick={() => setShowReceiptInfoModal(false)}>Cancel</button>
+                <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transition text-sm" onClick={generateAndDownloadReceipt}>Generate Receipt</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLocationModal && selectedDelivery && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowLocationModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Update Package Location</h3></div>
+              <div className="p-4">
+                <textarea placeholder="Enter current location..." value={customLocation} onChange={(e) => setCustomLocation(e.target.value)} rows="4" className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-200 bg-white'} outline-none focus:border-indigo-500 resize-vertical text-sm`} />
+                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-800 dark:text-blue-300">
+                  📍 This location will be visible to the customer in real-time
+                </div>
+                {selectedDelivery.currentLocation && (
+                  <div className="mt-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-xs text-emerald-800 dark:text-emerald-300">
+                    Current: {selectedDelivery.currentLocation}
+                  </div>
+                )}
+              </div>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm" onClick={() => setShowLocationModal(false)}>Cancel</button>
+                <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg transition text-sm disabled:opacity-50" onClick={() => updateDeliveryLocation(selectedDelivery.id, customLocation)} disabled={!customLocation.trim()}>Update Location</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showReceiptModal && receiptData && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-5" onClick={() => setShowReceiptModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto`} onClick={(e) => e.stopPropagation()}>
-              <div className="p-5 bg-emerald-500 text-white rounded-t-2xl"><h3 className="text-lg font-bold">Receipt Generated!</h3></div>
-              <div className="p-5 text-center">
-                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowReceiptModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto m-4`} onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-t-2xl"><h3 className="text-lg font-bold">🎉 Receipt Generated!</h3></div>
+              <div className="p-6 text-center">
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-6 rounded-xl">
                   <CheckCircle size={48} className="text-emerald-500 mx-auto" />
-                  <p className="mt-3">Receipt {receiptData.receiptId} has been downloaded!</p>
+                  <p className="mt-4 font-medium">Receipt {receiptData.receiptId} Downloaded!</p>
                   <p className="text-xs text-gray-500 mt-2">Check your downloads folder for the PNG image.</p>
                 </div>
               </div>
-              <div className="p-5 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-                <button className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition" onClick={() => setShowReceiptModal(false)}>Close</button>
+              <div className="p-4 pt-0 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+                <button className="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition text-sm font-medium" onClick={() => setShowReceiptModal(false)}>Close</button>
               </div>
             </motion.div>
           </div>
@@ -937,75 +1087,98 @@ function AdminDashboard() {
 
       {/* Hidden Receipt Template */}
       <div className="fixed -top-[9999px] -left-[9999px] z-[-1]">
-        <div ref={receiptRef} className="w-[420px] bg-white font-['Courier_New',monospace] p-6 text-[10px] border border-gray-300">
+        <div ref={receiptRef} style={{ 
+          width: '420px', 
+          background: '#ffffff', 
+          fontFamily: "'Courier New', monospace", 
+          padding: '24px', 
+          fontSize: '10px', 
+          border: '1px solid #cccccc',
+          color: '#000000'
+        }}>
           {receiptData && (
             <div>
-              <div className="text-center mb-5 border-b-2 border-black pb-3">
-                <div className="text-2xl font-bold">CYCLE LOGISTICS</div>
-                <div className="text-[9px]">Global Delivery Services</div>
-                <div className="text-[8px]">www.cycle.com | support@cycle.com</div>
+              <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000000', paddingBottom: '10px' }}>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#000000' }}>CYCLE LOGISTICS</div>
+                <div style={{ fontSize: '9px', color: '#333333' }}>Global Delivery Services</div>
+                <div style={{ fontSize: '8px', color: '#666666' }}>cycle@gmail.com</div>
               </div>
               
-              <div className="text-center mb-4">
-                <div className="text-sm font-bold bg-gray-100 inline-block px-3 py-1 rounded">OFFICIAL DELIVERY RECEIPT</div>
-                <div className="text-[9px] mt-1">Receipt #{receiptData.receiptId}</div>
+              <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', background: '#f0f0f0', display: 'inline-block', padding: '4px 12px', borderRadius: '4px', color: '#000000' }}>OFFICIAL DELIVERY RECEIPT</div>
+                <div style={{ fontSize: '9px', marginTop: '5px', color: '#333333' }}>Receipt #{receiptData.receiptId}</div>
               </div>
               
-              <div className="mb-4 border-b border-dotted border-gray-400 pb-3">
-                <div><strong>DATE:</strong> {new Date(receiptData.date).toLocaleString()}</div>
-                <div><strong>TRACKING ID:</strong> {receiptData.trackingId}</div>
-                <div><strong>CUSTOMER:</strong> {receiptData.customerName}</div>
-                <div><strong>EMAIL:</strong> {receiptData.customerEmail}</div>
+              <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px' }}>
+                <div style={{ color: '#000000' }}><strong>DATE:</strong> {new Date(receiptData.date).toLocaleString()}</div>
+                <div style={{ color: '#000000' }}><strong>TRACKING ID:</strong> {receiptData.trackingId}</div>
+                <div style={{ color: '#000000' }}><strong>CUSTOMER:</strong> {receiptData.customerName}</div>
+                <div style={{ color: '#000000' }}><strong>EMAIL:</strong> {receiptData.customerEmail}</div>
               </div>
               
-              <div className="mb-4 border-b border-dotted border-gray-400 pb-3 bg-gray-50 p-3 rounded">
-                <div>🕐 <strong>PICKUP TIME:</strong> {receiptData.pickupTime}</div>
-                <div>⏰ <strong>ESTIMATED DELIVERY:</strong> {receiptData.estimatedDelivery}</div>
-                <div>📅 <strong>ARRIVAL DATE:</strong> {receiptData.arrivalDate}</div>
-                {receiptData.actualDelivery && <div>✅ <strong>ACTUAL DELIVERY:</strong> {receiptData.actualDelivery}</div>}
+              <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px', background: '#f9fafb', padding: '10px', borderRadius: '6px' }}>
+                <div style={{ color: '#000000' }}>🕐 <strong>PICKUP TIME:</strong> {receiptData.pickupTime}</div>
+                <div style={{ color: '#000000' }}>⏰ <strong>ESTIMATED DELIVERY:</strong> {receiptData.estimatedDelivery}</div>
+                <div style={{ color: '#000000' }}>📅 <strong>ARRIVAL DATE:</strong> {receiptData.arrivalDate}</div>
+                {receiptData.actualDelivery && <div style={{ color: '#000000' }}>✅ <strong>ACTUAL DELIVERY:</strong> {receiptData.actualDelivery}</div>}
               </div>
               
-              <div className="mb-4 border-b border-dotted border-gray-400 pb-3">
-                <div><strong>📍 PICKUP ADDRESS:</strong></div>
-                <div className="ml-2 mb-2">{receiptData.pickupAddress}</div>
-                <div><strong>🏠 DROP OFF ADDRESS:</strong></div>
-                <div className="ml-2">{receiptData.dropoffAddress}</div>
+              <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px' }}>
+                <div style={{ color: '#000000' }}><strong>📍 PICKUP ADDRESS:</strong></div>
+                <div style={{ marginLeft: '8px', marginBottom: '8px', color: '#333333' }}>{receiptData.pickupAddress || 'N/A'}</div>
+                <div style={{ color: '#000000' }}><strong>🏠 DROP OFF ADDRESS:</strong></div>
+                <div style={{ marginLeft: '8px', color: '#333333' }}>{receiptData.dropoffAddress || 'N/A'}</div>
               </div>
               
-              <div className="mb-4 border-b border-black pb-3">
-                <div className="flex justify-between border-b border-black mb-2 pb-1 font-bold">
+              <div style={{ marginBottom: '15px', borderBottom: '1px solid #000000', paddingBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #000000', marginBottom: '8px', paddingBottom: '4px', fontWeight: 'bold', color: '#000000' }}>
                   <span>ITEM</span><span>QTY</span><span>UNIT</span><span>TOTAL</span>
                 </div>
-                <div className="flex justify-between mb-2">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#000000' }}>
                   <span>{receiptData.itemName}</span><span>{receiptData.quantity}</span><span>${receiptData.unitPrice}</span><span>${(receiptData.quantity * receiptData.unitPrice).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-bold mt-2 pt-2 border-t border-dashed border-gray-300">
+                <div style={{ borderTop: '1px dashed #cccccc', marginTop: '8px', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#000000' }}>
                   <span>GRAND TOTAL</span><span>${receiptData.price}.00</span>
                 </div>
               </div>
               
-              <div className="mb-4">
-                <div><strong>🚚 DRIVER:</strong> {receiptData.driverName}</div>
-                {receiptData.driverNote && <div><strong>📝 NOTE:</strong> {receiptData.driverNote}</div>}
+              <div style={{ marginBottom: '15px' }}>
+                <div style={{ color: '#000000' }}><strong>🚚 DRIVER:</strong> {receiptData.driverName}</div>
+                {receiptData.driverNote && <div style={{ color: '#000000' }}><strong>📝 NOTE:</strong> {receiptData.driverNote}</div>}
               </div>
               
-              <div className="text-center bg-blue-50 p-2 rounded mb-4">
-                <div>🔗 TRACK: {receiptData.trackingUrl}</div>
-              </div>
-              
-              <div className="text-center mt-4 pt-4 border-t-2 border-black">
-                <div className="inline-block bg-amber-100 p-2 rounded">
-                  <div>✓ VERIFIED DELIVERY ✓</div>
+              <div style={{ marginTop: '15px', borderTop: '2px solid #000000', paddingTop: '15px', textAlign: 'center' }}>
+                <div style={{ marginTop: '10px', padding: '8px', background: '#fef3c7', borderRadius: '6px', display: 'inline-block' }}>
+                  <div style={{ color: '#000000' }}>✓ VERIFIED DELIVERY ✓</div>
                 </div>
-                <div className="mt-3 text-[8px]">
+                <div style={{ marginTop: '12px', fontSize: '8px', color: '#333333' }}>
                   Authorized by: <strong>Cycle Management</strong>
-                  <div className="mt-1">Thank you for choosing Cycle Logistics!</div>
+                  <div style={{ marginTop: '6px', color: '#666666' }}>Thank you for choosing Cycle Logistics!</div>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid white;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+        }
+        @media (max-width: 480px) {
+          .xs\\:inline {
+            display: inline;
+          }
+        }
+      `}</style>
     </div>
   );
 }

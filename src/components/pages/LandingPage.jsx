@@ -9,7 +9,8 @@ import {
   CheckCircle, Headphones, ArrowUp, Search, FileText, Download,
   Eye, Navigation, LocateFixed, Calendar, Clock as ClockIcon,
   Sun, Moon, Lock, Key, User, LogIn, Award, TrendingUp, 
-  Heart, Gift, Coffee, Smartphone, Laptop, Bot, Cpu, Sparkles
+  Heart, Gift, Coffee, Smartphone, Laptop, Bot, Cpu,
+  Sparkles, UserCheck
 } from "lucide-react";
 
 function LandingPage() {
@@ -26,7 +27,7 @@ function LandingPage() {
   const [showCustomerPortal, setShowCustomerPortal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [activeCustomerTab, setActiveCustomerTab] = useState("track");
+  const [activeCustomerTab, setActiveCustomerTab] = useState("deliveries");
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -92,6 +93,20 @@ function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Auto-refresh deliveries every 15 seconds to show updated locations
+  useEffect(() => {
+    if (showCustomerPortal && customerEmail) {
+      const interval = setInterval(() => {
+        const deliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
+        const userDeliveries = deliveries.filter(d => 
+          d.customerEmail?.toLowerCase() === customerEmail.toLowerCase()
+        );
+        setCustomerDeliveries(userDeliveries);
+      }, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [showCustomerPortal, customerEmail]);
+
   const scrollToSection = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
     setMobileMenuOpen(false);
@@ -104,7 +119,7 @@ function LandingPage() {
       localStorage.setItem("admin_authenticated", "true");
       toast.success("Admin access granted! Redirecting...");
       setTimeout(() => {
-        window.location.href = "/MyValentineMessage/admin/dashboard";
+        window.location.href = "/admin/dashboard";
       }, 1000);
     } else {
       toast.error("Invalid admin credentials. Use: admin / admin123");
@@ -161,7 +176,7 @@ function LandingPage() {
     setCustomerEmail("");
     setCustomerName("");
     setCustomerDeliveries([]);
-    setActiveCustomerTab("track");
+    setActiveCustomerTab("deliveries");
     toast.success("Logged out successfully");
   };
 
@@ -181,7 +196,8 @@ function LandingPage() {
         const canvas = await html2canvas(receiptRef.current, { 
           scale: 2, 
           backgroundColor: '#ffffff',
-          logging: false
+          logging: false,
+          useCORS: true
         });
         const imageUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
@@ -199,7 +215,7 @@ function LandingPage() {
   const getStatusBadge = (status) => {
     const badges = {
       pending: { color: "text-amber-600", bg: "bg-amber-100", icon: Clock, text: "Pending" },
-      assigned: { color: "text-blue-600", bg: "bg-blue-100", icon: User, text: "Assigned" },
+      assigned: { color: "text-blue-600", bg: "bg-blue-100", icon: UserCheck, text: "Assigned" },
       picked_up: { color: "text-purple-600", bg: "bg-purple-100", icon: Package, text: "Picked Up" },
       in_transit: { color: "text-cyan-600", bg: "bg-cyan-100", icon: Truck, text: "In Transit" },
       delivered: { color: "text-emerald-600", bg: "bg-emerald-100", icon: CheckCircle, text: "Delivered" }
@@ -395,7 +411,7 @@ function LandingPage() {
                 </div>
 
                 {activeCustomerTab === "deliveries" && (
-                  <div className="max-h-[400px] overflow-y-auto space-y-3">
+                  <div className="max-h-[500px] overflow-y-auto space-y-3">
                     {customerDeliveries.length === 0 ? (
                       <div className="text-center py-12">
                         <Package size={48} className="mx-auto opacity-30 mb-3" />
@@ -406,6 +422,7 @@ function LandingPage() {
                       customerDeliveries.map(delivery => {
                         const badge = getStatusBadge(delivery.status);
                         const IconComponent = badge.icon;
+                        const hasReceipt = delivery.receipt && delivery.receiptGenerated;
                         return (
                           <motion.div 
                             key={delivery.id} 
@@ -429,12 +446,27 @@ function LandingPage() {
                                 <span className="opacity-70">To: {delivery.dropoffAddress?.substring(0, 30)}...</span>
                               </div>
                             </div>
-                            {delivery.currentLocation && (
-                              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full text-xs mt-3">
-                                <Navigation size={12} className="text-blue-500" />
-                                Current Location: {delivery.currentLocation}
+                            
+                            {/* Live Location Display */}
+                            {delivery.currentLocation && delivery.status !== "delivered" && (
+                              <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Navigation size={14} className="text-blue-500 animate-pulse" />
+                                  <span className="text-xs font-semibold">Live Package Location</span>
+                                  <span className="ml-auto text-[10px] text-green-500 flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                    Live
+                                  </span>
+                                </div>
+                                <div className="text-sm font-medium ml-6">{delivery.currentLocation}</div>
+                                {delivery.locationUpdatedAt && (
+                                  <div className="text-[10px] text-gray-500 ml-6 mt-1">
+                                    Updated: {new Date(delivery.locationUpdatedAt).toLocaleString()}
+                                  </div>
+                                )}
                               </div>
                             )}
+                            
                             <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
                               <div className="flex items-center gap-1">
                                 <Truck size={12} />
@@ -442,11 +474,21 @@ function LandingPage() {
                               </div>
                               <div className="font-semibold">${delivery.price || 25}</div>
                             </div>
-                            {delivery.receipt && (
+                            
+                            {/* Receipt Button - Only show if receipt exists */}
+                            {hasReceipt && (
                               <button className="mt-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105" onClick={(e) => { e.stopPropagation(); viewReceipt(delivery); }}>
                                 <FileText size={12} className="inline mr-1" /> View Receipt
                               </button>
                             )}
+                            
+                            {/* Refresh indicator for live updates */}
+                            <div className="mt-2 text-[10px] text-gray-400 text-right">
+                              <span className="inline-flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Live tracking active
+                              </span>
+                            </div>
                           </motion.div>
                         );
                       })
@@ -482,6 +524,11 @@ function LandingPage() {
                               <div className="flex justify-between items-center flex-wrap gap-2">
                                 <div>
                                   <span className="font-mono text-sm font-semibold">{delivery.trackingId}</span>
+                                  {delivery.currentLocation && delivery.status !== "delivered" && (
+                                    <div className="text-[10px] text-blue-500 mt-1 flex items-center gap-1">
+                                      <MapPin size={10} /> {delivery.currentLocation.substring(0, 30)}...
+                                    </div>
+                                  )}
                                   <div className={`text-xs opacity-50 mt-1`}>{new Date(delivery.createdAt).toLocaleDateString()}</div>
                                 </div>
                                 <span className={`px-2 py-1 rounded-full text-xs ${badge.bg} ${badge.color}`}>{badge.text}</span>
@@ -698,17 +745,9 @@ function LandingPage() {
                   <h4 className="font-bold text-lg mb-2">5. Your Rights</h4>
                   <p className="opacity-80">You have the right to access, correct, or delete your personal information. You can also opt-out of marketing communications at any time by clicking the unsubscribe link in our emails.</p>
                 </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">6. Cookies</h4>
-                  <p className="opacity-80">We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. You can control cookie settings through your browser preferences.</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">7. Updates to This Policy</h4>
-                  <p className="opacity-80">We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the effective date.</p>
-                </div>
                 <div className="bg-blue-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at privacy@cycle.com</p>
-                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
+                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at cycle@gmail.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: November 1, 2025</p>
                 </div>
               </div>
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
@@ -753,25 +792,9 @@ function LandingPage() {
                   <h4 className="font-bold text-lg mb-2">6. Liability and Insurance</h4>
                   <p className="opacity-80">Cycle Logistics provides insurance coverage up to $100 per package unless additional insurance is purchased. We are not liable for delays, lost packages due to incorrect addresses, or damages caused by improper packaging.</p>
                 </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">7. Payment Terms</h4>
-                  <p className="opacity-80">All payments must be made in full at the time of service. We accept credit cards, debit cards, and other payment methods as indicated on our platform. Late payments may incur additional fees.</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">8. Cancellation and Refunds</h4>
-                  <p className="opacity-80">Orders can be cancelled within 1 hour of placement for a full refund. After pickup, refunds are subject to review on a case-by-case basis. Contact support for assistance.</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">9. Account Termination</h4>
-                  <p className="opacity-80">We reserve the right to suspend or terminate accounts that violate these terms, engage in fraudulent activity, or misuse our services.</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2">10. Changes to Terms</h4>
-                  <p className="opacity-80">We may modify these terms at any time. Continued use of our services after changes constitutes acceptance of the new terms.</p>
-                </div>
                 <div className="bg-purple-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at legal@cycle.com</p>
-                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
+                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at cycle@gmail.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: November 1, 2025</p>
                 </div>
               </div>
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
@@ -782,7 +805,7 @@ function LandingPage() {
         )}
       </AnimatePresence>
 
-      {/* Tracking Modal */}
+      {/* Tracking Modal with Live Location */}
       <AnimatePresence>
         {showTrackModal && trackedDelivery && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowTrackModal(false)}>
@@ -802,13 +825,18 @@ function LandingPage() {
                 </div>
               </div>
 
-              {trackedDelivery.currentLocation && (
-                <div className="mb-5 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              {/* Live Location Section */}
+              {trackedDelivery.currentLocation && trackedDelivery.status !== "delivered" && (
+                <div className="mb-5 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <LocateFixed size={18} className="text-blue-500" />
-                    <strong className="text-sm">Current Package Location</strong>
+                    <Navigation size={18} className="text-blue-500 animate-pulse" />
+                    <strong className="text-sm">Live Package Location</strong>
+                    <span className="ml-auto text-[10px] text-green-500 flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                      Live
+                    </span>
                   </div>
-                  <div className="text-sm ml-7">{trackedDelivery.currentLocation}</div>
+                  <div className="text-sm font-medium ml-7">{trackedDelivery.currentLocation}</div>
                   {trackedDelivery.locationUpdatedAt && (
                     <div className="text-xs text-gray-500 ml-7 mt-1">
                       Last updated: {new Date(trackedDelivery.locationUpdatedAt).toLocaleString()}
@@ -867,7 +895,7 @@ function LandingPage() {
                 </div>
               </div>
 
-              {trackedDelivery.receipt && (
+              {trackedDelivery.receipt && trackedDelivery.receiptGenerated && (
                 <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold transition-all hover:-translate-y-1 hover:shadow-lg" onClick={() => viewReceipt(trackedDelivery)}>
                   <FileText size={16} className="inline mr-2" /> View Receipt
                 </button>
@@ -877,7 +905,7 @@ function LandingPage() {
         )}
       </AnimatePresence>
 
-      {/* Receipt Modal */}
+      {/* Receipt Modal - FIXED with inline styles, removed track URL and premium email */}
       <AnimatePresence>
         {showReceiptModal && selectedReceipt && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowReceiptModal(false)}>
@@ -887,55 +915,76 @@ function LandingPage() {
                 <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
-              {/* Hidden receipt template for PNG capture */}
+              {/* Hidden receipt template with inline styles - UPDATED (removed track URL and premium email) */}
               <div className="fixed -top-[9999px] -left-[9999px] z-[-1]">
-                <div ref={receiptRef} className="w-[420px] bg-white font-['Courier_New',monospace] p-6 text-[10px] border border-gray-300 text-black">
-                  <div className="text-center mb-5 border-b-2 border-black pb-3">
-                    <div className="text-2xl font-bold">CYCLE LOGISTICS</div>
-                    <div className="text-[9px]">Global Delivery Services</div>
-                    <div className="text-[8px]">cycle@gmail.com | premium@cycle.com</div>
-                  </div>
-                  <div className="text-center mb-4">
-                    <div className="text-sm font-bold bg-gray-100 inline-block px-3 py-1 rounded">OFFICIAL DELIVERY RECEIPT</div>
-                    <div className="text-[9px] mt-1">Receipt #{selectedReceipt.receiptId}</div>
-                  </div>
-                  <div className="mb-4 border-b border-dotted border-gray-400 pb-3">
-                    <div><strong>DATE:</strong> {new Date(selectedReceipt.date).toLocaleString()}</div>
-                    <div><strong>TRACKING ID:</strong> {selectedReceipt.trackingId}</div>
-                    <div><strong>CUSTOMER:</strong> {selectedReceipt.customerName}</div>
-                    <div><strong>EMAIL:</strong> {selectedReceipt.customerEmail}</div>
-                  </div>
-                  <div className="mb-4 border-b border-dotted border-gray-400 pb-3 bg-gray-50 p-3 rounded">
-                    <div>🕐 <strong>PICKUP TIME:</strong> {selectedReceipt.pickupTime}</div>
-                    <div>⏰ <strong>ESTIMATED DELIVERY:</strong> {selectedReceipt.estimatedDelivery}</div>
-                    <div>📅 <strong>ARRIVAL DATE:</strong> {selectedReceipt.arrivalDate}</div>
-                  </div>
-                  <div className="mb-4 border-b border-dotted border-gray-400 pb-3">
-                    <div><strong>📍 PICKUP ADDRESS:</strong></div>
-                    <div className="ml-2 mb-2">{selectedReceipt.pickupAddress || 'N/A'}</div>
-                    <div><strong>🏠 DROP OFF ADDRESS:</strong></div>
-                    <div className="ml-2">{selectedReceipt.dropoffAddress || 'N/A'}</div>
-                  </div>
-                  <div className="mb-4 border-b border-black pb-3">
-                    <div className="flex justify-between border-b border-black mb-2 pb-1 font-bold">
-                      <span>ITEM</span><span>QTY</span><span>UNIT</span><span>TOTAL</span>
+                <div ref={receiptRef} style={{ 
+                  width: '420px', 
+                  background: '#ffffff', 
+                  fontFamily: "'Courier New', monospace", 
+                  padding: '24px', 
+                  fontSize: '10px', 
+                  border: '1px solid #cccccc',
+                  color: '#000000'
+                }}>
+                  <div>
+                    <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000000', paddingBottom: '10px' }}>
+                      <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#000000' }}>CYCLE LOGISTICS</div>
+                      <div style={{ fontSize: '9px', color: '#333333' }}>Global Delivery Services</div>
+                      <div style={{ fontSize: '8px', color: '#666666' }}>cycle@gmail.com</div>
                     </div>
-                    <div className="flex justify-between mb-2">
-                      <span>{selectedReceipt.itemName}</span><span>{selectedReceipt.quantity}</span><span>${selectedReceipt.unitPrice}</span><span>${(selectedReceipt.quantity * selectedReceipt.unitPrice).toFixed(2)}</span>
+                    
+                    <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', background: '#f0f0f0', display: 'inline-block', padding: '4px 12px', borderRadius: '4px', color: '#000000' }}>OFFICIAL DELIVERY RECEIPT</div>
+                      <div style={{ fontSize: '9px', marginTop: '5px', color: '#333333' }}>Receipt #{selectedReceipt.receiptId}</div>
                     </div>
-                    <div className="flex justify-between font-bold mt-2 pt-2 border-t border-dashed border-gray-300">
-                      <span>GRAND TOTAL</span><span>${selectedReceipt.price}.00</span>
+                    
+                    <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px' }}>
+                      <div style={{ color: '#000000' }}><strong>DATE:</strong> {new Date(selectedReceipt.date).toLocaleString()}</div>
+                      <div style={{ color: '#000000' }}><strong>TRACKING ID:</strong> {selectedReceipt.trackingId}</div>
+                      <div style={{ color: '#000000' }}><strong>CUSTOMER:</strong> {selectedReceipt.customerName}</div>
+                      <div style={{ color: '#000000' }}><strong>EMAIL:</strong> {selectedReceipt.customerEmail}</div>
                     </div>
-                  </div>
-                  <div className="mb-4">
-                    <div><strong>🚚 DRIVER:</strong> {selectedReceipt.driverName}</div>
-                  </div>
-                  <div className="text-center bg-blue-50 p-2 rounded mb-4">
-                    <div>🔗 TRACK: cycle.com/track/{selectedReceipt.trackingId}</div>
-                  </div>
-                  <div className="text-center mt-4 pt-4 border-t-2 border-black">
-                    <div className="inline-block bg-amber-100 p-2 rounded">✓ VERIFIED DELIVERY ✓</div>
-                    <div className="mt-3 text-[8px]">Thank you for choosing Cycle Logistics!</div>
+                    
+                    <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px', background: '#f9fafb', padding: '10px', borderRadius: '6px' }}>
+                      <div style={{ color: '#000000' }}>🕐 <strong>PICKUP TIME:</strong> {selectedReceipt.pickupTime}</div>
+                      <div style={{ color: '#000000' }}>⏰ <strong>ESTIMATED DELIVERY:</strong> {selectedReceipt.estimatedDelivery}</div>
+                      <div style={{ color: '#000000' }}>📅 <strong>ARRIVAL DATE:</strong> {selectedReceipt.arrivalDate}</div>
+                      {selectedReceipt.actualDelivery && <div style={{ color: '#000000' }}>✅ <strong>ACTUAL DELIVERY:</strong> {selectedReceipt.actualDelivery}</div>}
+                    </div>
+                    
+                    <div style={{ marginBottom: '15px', borderBottom: '1px dotted #999999', paddingBottom: '10px' }}>
+                      <div style={{ color: '#000000' }}><strong>📍 PICKUP ADDRESS:</strong></div>
+                      <div style={{ marginLeft: '8px', marginBottom: '8px', color: '#333333' }}>{selectedReceipt.pickupAddress || 'N/A'}</div>
+                      <div style={{ color: '#000000' }}><strong>🏠 DROP OFF ADDRESS:</strong></div>
+                      <div style={{ marginLeft: '8px', color: '#333333' }}>{selectedReceipt.dropoffAddress || 'N/A'}</div>
+                    </div>
+                    
+                    <div style={{ marginBottom: '15px', borderBottom: '1px solid #000000', paddingBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #000000', marginBottom: '8px', paddingBottom: '4px', fontWeight: 'bold', color: '#000000' }}>
+                        <span>ITEM</span><span>QTY</span><span>UNIT</span><span>TOTAL</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#000000' }}>
+                        <span>{selectedReceipt.itemName}</span><span>{selectedReceipt.quantity}</span><span>${selectedReceipt.unitPrice}</span><span>${(selectedReceipt.quantity * selectedReceipt.unitPrice).toFixed(2)}</span>
+                      </div>
+                      <div style={{ borderTop: '1px dashed #cccccc', marginTop: '8px', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#000000' }}>
+                        <span>GRAND TOTAL</span><span>${selectedReceipt.price}.00</span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: '15px' }}>
+                      <div style={{ color: '#000000' }}><strong>🚚 DRIVER:</strong> {selectedReceipt.driverName}</div>
+                      {selectedReceipt.driverNote && <div style={{ color: '#000000' }}><strong>📝 NOTE:</strong> {selectedReceipt.driverNote}</div>}
+                    </div>
+                    
+                    <div style={{ marginTop: '15px', borderTop: '2px solid #000000', paddingTop: '15px', textAlign: 'center' }}>
+                      <div style={{ marginTop: '10px', padding: '8px', background: '#fef3c7', borderRadius: '6px', display: 'inline-block' }}>
+                        <div style={{ color: '#000000' }}>✓ VERIFIED DELIVERY ✓</div>
+                      </div>
+                      <div style={{ marginTop: '12px', fontSize: '8px', color: '#333333' }}>
+                        Authorized by: <strong>Cycle Management</strong>
+                        <div style={{ marginTop: '6px', color: '#666666' }}>Thank you for choosing Cycle Logistics!</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
