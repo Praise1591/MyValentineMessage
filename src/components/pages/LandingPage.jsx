@@ -119,6 +119,7 @@ function LandingPage() {
       localStorage.setItem("admin_authenticated", "true");
       toast.success("Admin access granted! Redirecting...");
       setTimeout(() => {
+        // Updated for Vercel deployment - using relative path
         window.location.href = "/admin/dashboard";
       }, 1000);
     } else {
@@ -746,8 +747,8 @@ function LandingPage() {
                   <p className="opacity-80">You have the right to access, correct, or delete your personal information. You can also opt-out of marketing communications at any time by clicking the unsubscribe link in our emails.</p>
                 </div>
                 <div className="bg-blue-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at cycle@gmail.com</p>
-                  <p className="text-xs mt-2 opacity-60">Last updated: November 1, 2025</p>
+                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at privacy@cycle.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
                 </div>
               </div>
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
@@ -793,8 +794,8 @@ function LandingPage() {
                   <p className="opacity-80">Cycle Logistics provides insurance coverage up to $100 per package unless additional insurance is purchased. We are not liable for delays, lost packages due to incorrect addresses, or damages caused by improper packaging.</p>
                 </div>
                 <div className="bg-purple-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at cycle@gmail.com</p>
-                  <p className="text-xs mt-2 opacity-60">Last updated: November 1, 2025</p>
+                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at legal@cycle.com</p>
+                  <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
                 </div>
               </div>
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
@@ -905,7 +906,7 @@ function LandingPage() {
         )}
       </AnimatePresence>
 
-      {/* Receipt Modal - FIXED with inline styles, removed track URL and premium email */}
+      {/* Receipt Modal */}
       <AnimatePresence>
         {showReceiptModal && selectedReceipt && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-5" onClick={() => setShowReceiptModal(false)}>
@@ -915,7 +916,7 @@ function LandingPage() {
                 <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
-              {/* Hidden receipt template with inline styles - UPDATED (removed track URL and premium email) */}
+              {/* Hidden receipt template with inline styles */}
               <div className="fixed -top-[9999px] -left-[9999px] z-[-1]">
                 <div ref={receiptRef} style={{ 
                   width: '420px', 
