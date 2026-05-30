@@ -114,13 +114,13 @@ function LandingPage() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  // Updated for HashRouter
   const handleAdminLogin = () => {
     if (adminUsername === "admin" && adminPassword === "admin123") {
       localStorage.setItem("admin_authenticated", "true");
       toast.success("Admin access granted! Redirecting...");
       setTimeout(() => {
-        // Updated for Vercel deployment - using relative path
-        window.location.href = "/admin/dashboard";
+        window.location.href = "/#/admin/dashboard";
       }, 1000);
     } else {
       toast.error("Invalid admin credentials. Use: admin / admin123");

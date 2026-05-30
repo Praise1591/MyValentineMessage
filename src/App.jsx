@@ -1,8 +1,9 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./components/pages/LandingPage";
 import AdminDashboard from "./components/pages/admin/AdminDashboard";
 
+// Protected Admin Route
 const AdminRoute = ({ children }) => {
   const isAdminAuthenticated = localStorage.getItem("admin_authenticated") === "true";
   return isAdminAuthenticated ? children : <Navigate to="/" />;
@@ -21,7 +22,6 @@ function App() {
             </AdminRoute>
           } 
         />
-        {/* Catch all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
