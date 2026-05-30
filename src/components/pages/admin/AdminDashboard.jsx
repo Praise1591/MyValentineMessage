@@ -15,7 +15,13 @@ import {
   Copy, ExternalLink, Info, HelpCircle, Maximize2, Minimize2, Sparkles,
   Cloud, Wifi, Battery, Signal, Fingerprint, Lock, Key, Gift, Heart,
   LocateFixed, Navigation2, Route as RouteIcon, PartyPopper, Rocket,
-  TrendingUp as TrendingUpIcon, Users as UsersIcon, ShoppingBag, Briefcase
+  TrendingUp as TrendingUpIcon, Users as UsersIcon, ShoppingBag, Briefcase,
+  Gamepad2, Trophy, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Brain, 
+  Coffee, Moon, Sun, Music, Video, Camera, BookOpen, Map as MapIcon,
+  Flag, Anchor, Compass as CompassIcon, Wind, CloudRain, Thermometer,
+  BarChart, LineChart as LineChartIcon, PieChart as PieChartIcon,
+  DollarSign as DollarSignIcon, Percent, Calendar as CalendarIcon,
+  MessageSquare, Heart as HeartIcon, Smile, Frown, Meh, Lightbulb
 } from "lucide-react";
 
 function AdminDashboard() {
@@ -29,7 +35,6 @@ function AdminDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showReceiptInfoModal, setShowReceiptInfoModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
@@ -53,6 +58,28 @@ function AdminDashboard() {
     price: "",
     driverNote: "",
     itemPrice: ""
+  });
+  
+  // Game states
+  const [diceValue, setDiceValue] = useState(null);
+  const [diceRolling, setDiceRolling] = useState(false);
+  const [diceHistory, setDiceHistory] = useState([]);
+  const [mood, setMood] = useState("😊");
+  const [funFact, setFunFact] = useState("");
+  const [joke, setJoke] = useState("");
+  
+  // Weather mock data
+  const [weather, setWeather] = useState({
+    temp: 72,
+    condition: "Sunny",
+    icon: "☀️",
+    humidity: 65,
+    wind: 12
+  });
+  
+  const [dailyQuote, setDailyQuote] = useState({
+    quote: "The best way to predict the future is to create it.",
+    author: "Peter Drucker"
   });
   
   const receiptRef = useRef(null);
@@ -82,6 +109,42 @@ function AdminDashboard() {
     customerSatisfaction: "98%"
   });
 
+  // Fun facts array
+  const funFacts = [
+    "🐱 A group of cats is called a clowder!",
+    "🌊 The Pacific Ocean covers more area than all the continents combined!",
+    "🍕 The world's largest pizza was 122 feet in diameter!",
+    "🐘 Elephants are the only mammals that can't jump!",
+    "🍫 Dark chocolate produces feel-good chemicals in your brain!",
+    "🐬 Dolphins have names for each other!",
+    "🎵 Listening to music releases dopamine in your brain!",
+    "🌙 The moon is moving away from Earth by 1.5 inches per year!",
+    "🐧 Penguins propose to their mates with a pebble!",
+    "☕ Coffee is the second most traded commodity in the world!"
+  ];
+
+  // Jokes array
+  const jokes = [
+    "Why don't scientists trust atoms? Because they make up everything! 🔬",
+    "What do you call a fake noodle? An impasta! 🍝",
+    "Why did the scarecrow win an award? He was outstanding in his field! 🌾",
+    "What do you call a bear with no teeth? A gummy bear! 🐻",
+    "Why don't eggs tell jokes? They'd crack each other up! 🥚",
+    "What do you call a fish with no eyes? A fsh! 🐟",
+    "Why did the math book look so sad? Because it had too many problems! 📚",
+    "What do you call a sleeping bull? A bulldozer! 🐂"
+  ];
+
+  // Quotes array
+  const quotes = [
+    { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+    { quote: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { quote: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+    { quote: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+    { quote: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+    { quote: "Everything you've ever wanted is on the other side of fear.", author: "George Addair" }
+  ];
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
@@ -92,7 +155,36 @@ function AdminDashboard() {
     loadNotifications();
     generateMockData();
     calculateQuickStats();
+    setRandomFunFact();
+    setRandomJoke();
+    setRandomQuote();
   }, []);
+
+  const setRandomFunFact = () => {
+    const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+    setFunFact(randomFact);
+  };
+
+  const setRandomJoke = () => {
+    const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+    setJoke(randomJoke);
+  };
+
+  const setRandomQuote = () => {
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setDailyQuote(randomQuote);
+  };
+
+  const rollDice = () => {
+    setDiceRolling(true);
+    setTimeout(() => {
+      const value = Math.floor(Math.random() * 6) + 1;
+      setDiceValue(value);
+      setDiceRolling(false);
+      setDiceHistory(prev => [value, ...prev].slice(0, 10));
+      toast.success(`🎲 You rolled a ${value}!`);
+    }, 500);
+  };
 
   const calculateQuickStats = () => {
     const today = new Date().toDateString();
@@ -500,6 +592,19 @@ function AdminDashboard() {
     revenue: deliveries.filter(d => d.status === "delivered").reduce((sum, d) => sum + (d.price || 25), 0)
   };
 
+  // Get dice icon based on value
+  const getDiceIcon = (value) => {
+    const icons = {
+      1: <Dice1 size={40} />,
+      2: <Dice2 size={40} />,
+      3: <Dice3 size={40} />,
+      4: <Dice4 size={40} />,
+      5: <Dice5 size={40} />,
+      6: <Dice6 size={40} />
+    };
+    return icons[value] || <Dice1 size={40} />;
+  };
+
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100'} flex`}>
       <Toaster position="top-right" />
@@ -545,10 +650,10 @@ function AdminDashboard() {
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar - Enhanced with more sections */}
       <div className={`fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 text-gray-800 dark:text-white transition-all duration-300 z-[1000] overflow-y-auto shadow-2xl
-        ${sidebarOpen ? 'w-[260px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-[70px]'} 
-        md:w-[70px] hover:md:w-[260px] group/sidebar transition-all duration-300`}>
+        ${sidebarOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-[70px]'} 
+        md:w-[70px] hover:md:w-[280px] group/sidebar transition-all duration-300`}>
         
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 text-center overflow-hidden">
           <div className={`text-2xl font-bold mb-3 transition-all ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
@@ -564,16 +669,20 @@ function AdminDashboard() {
             onClick={() => setDarkMode(!darkMode)} 
             className={`mt-2 bg-transparent border-none cursor-pointer text-gray-800 dark:text-white hover:text-indigo-600 transition text-xs ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}
           >
-            {darkMode ? "☀️ Light" : "🌙 Dark"}
+            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
         </div>
         
+        {/* Main Navigation */}
         <div className="p-2 space-y-1">
+          <div className={`text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            Main
+          </div>
           {[
-            { id: "overview", label: "Dashboard", icon: LayoutDashboard, color: "text-indigo-500" },
-            { id: "drivers", label: "Drivers", icon: Truck, color: "text-blue-500" },
-            { id: "customers", label: "Customers", icon: Users, color: "text-green-500" },
-            { id: "deliveries", label: "Deliveries", icon: Package, color: "text-purple-500" }
+            { id: "overview", label: "Dashboard", icon: LayoutDashboard, color: "text-indigo-500", emoji: "📊" },
+            { id: "drivers", label: "Drivers", icon: Truck, color: "text-blue-500", emoji: "🚚" },
+            { id: "customers", label: "Customers", icon: Users, color: "text-green-500", emoji: "👥" },
+            { id: "deliveries", label: "Deliveries", icon: Package, color: "text-purple-500", emoji: "📦" }
           ].map(item => {
             const IconComponent = item.icon;
             return (
@@ -598,8 +707,90 @@ function AdminDashboard() {
             );
           })}
         </div>
+
+        {/* Fun Zone Section */}
+        <div className="p-2 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className={`text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            🎮 Fun Zone
+          </div>
+          
+          {/* Dice Game */}
+          <div className={`px-3 py-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 mb-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Gamepad2 size={16} className="text-purple-500" />
+              <span className="text-xs font-semibold">Dice Roller</span>
+            </div>
+            <div className="text-center">
+              <div className="mb-2">
+                {diceValue ? (
+                  <motion.div
+                    animate={diceRolling ? { rotate: 360 } : { rotate: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {getDiceIcon(diceValue)}
+                  </motion.div>
+                ) : (
+                  <Dice1 size={40} className="opacity-50" />
+                )}
+              </div>
+              <button
+                onClick={rollDice}
+                disabled={diceRolling}
+                className="w-full text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white py-1 rounded-lg hover:shadow-lg transition disabled:opacity-50"
+              >
+                {diceRolling ? "Rolling..." : "Roll Dice! 🎲"}
+              </button>
+              {diceHistory.length > 0 && (
+                <div className="mt-2 text-[10px] text-gray-500">
+                  History: {diceHistory.join(", ")}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Daily Mood */}
+          <div className={`px-3 py-3 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Smile size={16} className="text-green-500" />
+              <span className="text-xs font-semibold">Daily Mood</span>
+            </div>
+            <div className="flex justify-around">
+              <button onClick={() => setMood("😊")} className={`text-2xl hover:scale-110 transition ${mood === "😊" ? "opacity-100" : "opacity-40"}`}>😊</button>
+              <button onClick={() => setMood("😎")} className={`text-2xl hover:scale-110 transition ${mood === "😎" ? "opacity-100" : "opacity-40"}`}>😎</button>
+              <button onClick={() => setMood("🤔")} className={`text-2xl hover:scale-110 transition ${mood === "🤔" ? "opacity-100" : "opacity-40"}`}>🤔</button>
+              <button onClick={() => setMood("🥳")} className={`text-2xl hover:scale-110 transition ${mood === "🥳" ? "opacity-100" : "opacity-40"}`}>🥳</button>
+              <button onClick={() => setMood("😴")} className={`text-2xl hover:scale-110 transition ${mood === "😴" ? "opacity-100" : "opacity-40"}`}>😴</button>
+            </div>
+            <div className="text-center text-xs mt-2">Today's Mood: {mood}</div>
+          </div>
+        </div>
+
+        {/* Analytics Section */}
+        <div className="p-2 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className={`text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
+            📈 Analytics
+          </div>
+          {[
+            { id: "analytics", label: "Performance", icon: TrendingUp, color: "text-emerald-500" },
+            { id: "reports", label: "Reports", icon: FileText, color: "text-blue-500" },
+            { id: "insights", label: "Insights", icon: Lightbulb, color: "text-yellow-500" }
+          ].map(item => {
+            const IconComponent = item.icon;
+            return (
+              <div 
+                key={item.id} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800`}
+              >
+                <IconComponent size={18} className={`min-w-[18px] ${item.color}`} />
+                <span className={`text-xs transition-all whitespace-nowrap ${sidebarOpen ? 'inline' : 'md:hidden group-hover/sidebar:inline'}`}>
+                  {item.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
         
-        {/* Updated logout link for HashRouter */}
+        {/* Logout */}
         <div className={`absolute bottom-4 left-0 right-0 px-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
           <a href="/#/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition no-underline">
             <LogOut size={18} /> 
@@ -609,7 +800,7 @@ function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'md:ml-[260px]' : 'ml-0 md:ml-[70px]'}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'md:ml-[280px]' : 'ml-0 md:ml-[70px]'}`}>
         <div className="p-3 sm:p-4 md:p-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
@@ -620,7 +811,7 @@ function AdminDashboard() {
                 {activeTab === "customers" && "👥 Customer Management"}
                 {activeTab === "deliveries" && "📦 Delivery Management"}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">Welcome back, Admin!</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Welcome back, Admin! {mood}</p>
             </div>
             <div className="flex gap-2 items-center flex-wrap">
               <div className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs ${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'} shadow-sm`}>
@@ -638,7 +829,7 @@ function AdminDashboard() {
             </div>
           </div>
 
-          {/* Overview Tab */}
+          {/* Overview Tab - Enhanced with fun widgets */}
           {activeTab === "overview" && (
             <>
               {/* Stats Grid */}
@@ -688,6 +879,59 @@ function AdminDashboard() {
                 </motion.div>
               </div>
 
+              {/* Fun Widgets Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Weather Widget */}
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-lg`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Cloud size={18} className="text-blue-500" />
+                    <h3 className="font-semibold text-sm">Weather Update</h3>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-3xl font-bold">{weather.temp}°F</div>
+                      <div className="text-xs text-gray-500">{weather.condition}</div>
+                    </div>
+                    <div className="text-5xl">{weather.icon}</div>
+                  </div>
+                  <div className="flex justify-between mt-3 text-xs text-gray-500">
+                    <span>💧 Humidity: {weather.humidity}%</span>
+                    <span>💨 Wind: {weather.wind} mph</span>
+                  </div>
+                </div>
+
+                {/* Daily Quote */}
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-lg`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <HeartIcon size={18} className="text-red-500" />
+                    <h3 className="font-semibold text-sm">Daily Inspiration</h3>
+                  </div>
+                  <p className="text-sm italic">"{dailyQuote.quote}"</p>
+                  <p className="text-xs text-gray-500 mt-2">— {dailyQuote.author}</p>
+                  <button onClick={setRandomQuote} className="mt-2 text-xs text-indigo-500 hover:underline">New Quote ↻</button>
+                </div>
+
+                {/* Fun Fact */}
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-lg`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain size={18} className="text-purple-500" />
+                    <h3 className="font-semibold text-sm">Did You Know?</h3>
+                  </div>
+                  <p className="text-sm">{funFact}</p>
+                  <button onClick={setRandomFunFact} className="mt-2 text-xs text-indigo-500 hover:underline">New Fact ↻</button>
+                </div>
+              </div>
+
+              {/* Joke of the Moment */}
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-lg mb-6`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare size={18} className="text-yellow-500" />
+                  <h3 className="font-semibold text-sm">😂 Joke of the Moment</h3>
+                </div>
+                <p className="text-sm">{joke}</p>
+                <button onClick={setRandomJoke} className="mt-2 text-xs text-indigo-500 hover:underline">Another Joke ↻</button>
+              </div>
+
               {/* Quick Stats Row */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center shadow-md`}>
@@ -734,7 +978,7 @@ function AdminDashboard() {
             </>
           )}
 
-          {/* Drivers Tab - Mobile Responsive */}
+          {/* Drivers Tab */}
           {activeTab === "drivers" && (
             <>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex gap-3 flex-wrap shadow-md`}>
@@ -794,7 +1038,7 @@ function AdminDashboard() {
             </>
           )}
 
-          {/* Customers Tab - Mobile Responsive */}
+          {/* Customers Tab */}
           {activeTab === "customers" && (
             <>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex gap-3 flex-wrap shadow-md`}>
@@ -830,7 +1074,7 @@ function AdminDashboard() {
             </>
           )}
 
-          {/* Deliveries Tab - Mobile Responsive */}
+          {/* Deliveries Tab */}
           {activeTab === "deliveries" && (
             <>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 sm:p-4 mb-4 flex flex-col sm:flex-row gap-3 shadow-md`}>
