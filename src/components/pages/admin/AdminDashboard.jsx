@@ -599,8 +599,9 @@ function AdminDashboard() {
           })}
         </div>
         
+        {/* Updated logout link for HashRouter */}
         <div className={`absolute bottom-4 left-0 right-0 px-2 ${sidebarOpen ? 'block' : 'md:hidden group-hover/sidebar:block'}`}>
-          <a href="/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition no-underline">
+          <a href="/#/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition no-underline">
             <LogOut size={18} /> 
             <span className="text-sm whitespace-nowrap">Logout</span>
           </a>
@@ -936,7 +937,7 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* All Modals (kept same as before, just responsive) */}
+      {/* Add Driver Modal */}
       <AnimatePresence>
         {showDriverModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowDriverModal(false)}>
@@ -957,6 +958,7 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Add Delivery Modal */}
       <AnimatePresence>
         {showDeliveryModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowDeliveryModal(false)}>
@@ -982,6 +984,7 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Assign Modal */}
       <AnimatePresence>
         {showAssignModal && selectedDelivery && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowAssignModal(false)}>
@@ -1000,6 +1003,7 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Receipt Info Modal */}
       <AnimatePresence>
         {showReceiptInfoModal && selectedDelivery && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowReceiptInfoModal(false)}>
@@ -1040,6 +1044,7 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Location Modal */}
       <AnimatePresence>
         {showLocationModal && selectedDelivery && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowLocationModal(false)}>
@@ -1065,6 +1070,7 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Receipt Modal */}
       <AnimatePresence>
         {showReceiptModal && receiptData && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100] p-4" onClick={() => setShowReceiptModal(false)}>
