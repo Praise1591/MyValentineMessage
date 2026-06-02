@@ -51,9 +51,9 @@ function LandingPage() {
   ];
 
   const stats = [
-    { value: "50K+", label: "Deliveries", icon: Package },
+    { value: "58K+", label: "Deliveries", icon: Package },
     { value: "98%", label: "On-Time Rate", icon: Clock },
-    { value: "4.9", label: "Rating", icon: Star },
+    { value: "4.7", label: "Rating", icon: Star },
     { value: "200+", label: "Cities", icon: Globe }
   ];
 
@@ -605,10 +605,10 @@ function LandingPage() {
             </p>
             <div className="flex flex-col items-center gap-4">
               <a 
-                href="mailto:cycle@gmail.com" 
+                href="mailto:mycycleride1@gmail.com" 
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-all hover:-translate-y-2 hover:shadow-2xl"
               >
-                <Mail size={24} /> cycle@gmail.com
+                <Mail size={24} /> mycycleride1@gmail.com
               </a>
               <p className={`text-xs ${darkMode ? 'text-white/50' : 'text-slate-500'}`}>
                 ✉️ We typically respond within 2-4 hours
@@ -665,7 +665,7 @@ function LandingPage() {
               <h4 className="font-bold mb-4 text-lg">Contact Info</h4>
               <div className="space-y-3 text-white/60 text-sm">
                 <div className="flex items-center gap-2">
-                  <Mail size={16} /> cycle@gmail.com
+                  <Mail size={16} /> mycycleride1@gmail.com
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock size={16} /> 24/7 Support Available
@@ -719,7 +719,7 @@ function LandingPage() {
                   <p className="opacity-80">You have the right to access, correct, or delete your personal information. You can also opt-out of marketing communications at any time by clicking the unsubscribe link in our emails.</p>
                 </div>
                 <div className="bg-blue-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at privacy@cycle.com</p>
+                  <p className="text-sm"><strong>Contact Us:</strong> For privacy-related questions, email us at mycycleride1@gmail.com</p>
                   <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
                 </div>
               </div>
@@ -766,7 +766,7 @@ function LandingPage() {
                   <p className="opacity-80">Cycle Logistics provides insurance coverage up to $100 per package unless additional insurance is purchased. We are not liable for delays, lost packages due to incorrect addresses, or damages caused by improper packaging.</p>
                 </div>
                 <div className="bg-purple-500/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at legal@cycle.com</p>
+                  <p className="text-sm"><strong>Contact:</strong> For questions about these terms, email us at mycycleride1@gmail.com</p>
                   <p className="text-xs mt-2 opacity-60">Last updated: January 1, 2025</p>
                 </div>
               </div>
@@ -903,7 +903,7 @@ function LandingPage() {
                     <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000000', paddingBottom: '10px' }}>
                       <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#000000' }}>CYCLE LOGISTICS</div>
                       <div style={{ fontSize: '9px', color: '#333333' }}>Global Delivery Services</div>
-                      <div style={{ fontSize: '8px', color: '#666666' }}>cycle@gmail.com</div>
+                      <div style={{ fontSize: '8px', color: '#666666' }}>mycycleride1@gmail.com</div>
                     </div>
                     
                     <div style={{ textAlign: 'center', marginBottom: '15px' }}>
