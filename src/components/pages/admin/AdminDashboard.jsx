@@ -1351,7 +1351,7 @@ function AdminDashboard() {
               <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000000', paddingBottom: '10px' }}>
                 <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#000000' }}>CYCLE LOGISTICS</div>
                 <div style={{ fontSize: '9px', color: '#333333' }}>Global Delivery Services</div>
-                <div style={{ fontSize: '8px', color: '#666666' }}>cycle@gmail.com</div>
+                <div style={{ fontSize: '8px', color: '#666666' }}>mycycleride1@gmail.com</div>
               </div>
               
               <div style={{ textAlign: 'center', marginBottom: '15px' }}>
