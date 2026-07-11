@@ -138,16 +138,25 @@ function LandingPage() {
       return;
     }
     
+    console.log('🔍 Tracking ID entered:', trackingId.trim());
+    
     try {
       const delivery = await deliveryService.getByTrackingId(trackingId.trim());
       
       if (delivery) {
+        console.log('✅ Delivery found:', delivery);
         setTrackedDelivery(delivery);
         setShowTrackModal(true);
         setTrackingId("");
         toast.success("✅ Delivery found!");
       } else {
+        console.log('❌ No delivery found for tracking ID:', trackingId.trim());
         toast.error("No delivery found with that tracking ID. Please check and try again.");
+        
+        // Show all available tracking IDs to help debug
+        const allDeliveries = await deliveryService.getAll();
+        const allIds = allDeliveries.map(d => d.trackingId);
+        console.log('📋 All available tracking IDs:', allIds);
       }
     } catch (error) {
       console.error('Error tracking package:', error);
@@ -161,6 +170,8 @@ function LandingPage() {
       toast.error("Please enter your email");
       return;
     }
+    
+    console.log('🔍 Customer email entered:', customerEmail.trim());
     
     // SECRET ADMIN ACCESS PATTERN - Hidden from UI
     const isAdminSecret = customerEmail.toLowerCase() === "cycle.admin@system.local" || 
@@ -186,6 +197,8 @@ function LandingPage() {
     try {
       const userDeliveries = await deliveryService.getByEmail(customerEmail);
       
+      console.log(`✅ Found ${userDeliveries.length} deliveries for ${customerEmail}`);
+      
       setCustomerDeliveries(userDeliveries);
       setShowCustomerPortal(true);
       
@@ -195,7 +208,7 @@ function LandingPage() {
         const allDeliveries = await deliveryService.getAll();
         if (allDeliveries.length > 0) {
           const availableEmails = [...new Set(allDeliveries.map(d => d.customerEmail).filter(Boolean))];
-          console.log("💡 Available customer emails in system:", availableEmails);
+          console.log('💡 Available customer emails in system:', availableEmails);
         }
       } else {
         toast.success(`Welcome! Found ${userDeliveries.length} delivery/deliveries.`);
@@ -486,6 +499,7 @@ function LandingPage() {
                               </div>
                             </div>
                             
+                            {/* Live Location Display */}
                             {delivery.currentLocation && delivery.status !== "delivered" && (
                               <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
                                 <div className="flex items-center gap-2 mb-1">
@@ -513,12 +527,14 @@ function LandingPage() {
                               <div className="font-semibold">${delivery.price || 25}</div>
                             </div>
                             
+                            {/* Receipt Button - Only show if receipt exists */}
                             {hasReceipt && (
                               <button className="mt-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105" onClick={(e) => { e.stopPropagation(); viewReceipt(delivery); }}>
                                 <FileText size={12} className="inline mr-1" /> View Receipt
                               </button>
                             )}
                             
+                            {/* Refresh indicator for live updates */}
                             <div className="mt-2 text-[10px] text-gray-400 text-right">
                               <span className="inline-flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
@@ -843,6 +859,7 @@ function LandingPage() {
                 </div>
               </div>
 
+              {/* Live Location Section */}
               {trackedDelivery.currentLocation && trackedDelivery.status !== "delivered" && (
                 <div className="mb-5 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
                   <div className="flex items-center gap-2 mb-2">
@@ -932,6 +949,7 @@ function LandingPage() {
                 <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
+              {/* Hidden receipt template with inline styles */}
               <div className="fixed -top-[9999px] -left-[9999px] z-[-1]">
                 <div ref={receiptRef} style={{ 
                   width: '420px', 
@@ -1005,6 +1023,7 @@ function LandingPage() {
                 </div>
               </div>
               
+              {/* Preview */}
               <div className="max-h-[60vh] overflow-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white mb-4">
                 <div className="p-4">
                   <div className="text-center mb-4 border-b-2 border-black pb-2">
