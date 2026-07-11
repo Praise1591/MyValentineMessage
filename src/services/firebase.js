@@ -1,4 +1,6 @@
-// src/services/firebase.js - CDN Version (No npm install needed)
+// src/services/firebase.js
+// 🔥 FIREBASE WITH CDN - No npm install needed!
+
 const firebaseConfig = {
   apiKey: "AIzaSyCWpNDyHhFhZOXecMU79uDUKJXVeevEoVo",
   authDomain: "cycle-d52bd.firebaseapp.com",
@@ -70,7 +72,6 @@ export const deliveryService = {
       const snapshot = await db
         .collection('deliveries')
         .where('customerEmail', '==', email.toLowerCase())
-        .orderBy('createdAt', 'desc')
         .get();
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
