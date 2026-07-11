@@ -1,4 +1,4 @@
-// src/services/firebase.js
+
 // 🔥 FIREBASE WITH CDN - No npm install needed!
 
 const firebaseConfig = {
