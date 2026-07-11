@@ -1,5 +1,6 @@
 // src/services/firebase.js
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { 
   getFirestore, 
   collection, 
@@ -12,27 +13,30 @@ import {
   deleteDoc,
   orderBy,
   limit,
-  onSnapshot
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+  getDoc
 } from 'firebase/firestore';
 
 // ============================================
 // 🔥 YOUR FIREBASE CONFIGURATION
-// REPLACE THIS WITH YOUR ACTUAL CONFIG FROM FIREBASE CONSOLE
 // ============================================
 const firebaseConfig = {
-  apiKey: "AIzaSyABC123def456GHI789jklMNO012pqr",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
-  // measurementId: "G-XXXXXXXX" // Optional
+  apiKey: "AIzaSyCWpNDyHhFhZOXecMU79uDUKJXVeevEoVo",
+  authDomain: "cycle-d52bd.firebaseapp.com",
+  projectId: "cycle-d52bd",
+  storageBucket: "cycle-d52bd.firebasestorage.app",
+  messagingSenderId: "876772415754",
+  appId: "1:876772415754:web:0f75c80e5da6bb73f142f3",
+  measurementId: "G-BSMZF71LWZ"
 };
 
 // ============================================
 // Initialize Firebase
 // ============================================
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
 // ============================================
@@ -248,7 +252,108 @@ export const deliveryService = {
     }, (error) => {
       console.error('Error listening to delivery:', error);
     });
+  },
+
+  /**
+   * Get a single delivery by ID
+   * @param {string} id - Delivery document ID
+   * @returns {Promise<Object|null>} Delivery object or null if not found
+   */
+  getById: async (id) => {
+    try {
+      const docRef = doc(db, 'deliveries', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting delivery by ID:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Get deliveries by driver name
+   * @param {string} driverName - Driver's name
+   * @returns {Promise<Array>} Array of delivery objects
+   */
+  getByDriver: async (driverName) => {
+    try {
+      const q = query(
+        collection(db, 'deliveries'),
+        where('driverName', '==', driverName),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+    } catch (error) {
+      console.error('Error getting deliveries by driver:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get deliveries by date range
+   * @param {string} startDate - Start date ISO string
+   * @param {string} endDate - End date ISO string
+   * @returns {Promise<Array>} Array of delivery objects
+   */
+  getByDateRange: async (startDate, endDate) => {
+    try {
+      const q = query(
+        collection(db, 'deliveries'),
+        where('createdAt', '>=', startDate),
+        where('createdAt', '<=', endDate),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+    } catch (error) {
+      console.error('Error getting deliveries by date range:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Count deliveries by status
+   * @returns {Promise<Object>} Count of deliveries by status
+   */
+  countByStatus: async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'deliveries'));
+      const deliveries = snapshot.docs.map(doc => doc.data());
+      
+      const counts = {
+        pending: 0,
+        assigned: 0,
+        picked_up: 0,
+        in_transit: 0,
+        delivered: 0
+      };
+      
+      deliveries.forEach(delivery => {
+        if (counts.hasOwnProperty(delivery.status)) {
+          counts[delivery.status]++;
+        }
+      });
+      
+      return counts;
+    } catch (error) {
+      console.error('Error counting deliveries by status:', error);
+      return {};
+    }
   }
 };
 
+// Export db for direct use if needed
+export { db, analytics, app };
+
+// Default export
 export default db;
