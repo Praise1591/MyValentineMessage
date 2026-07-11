@@ -230,10 +230,13 @@ function AdminDashboard() {
       setPendingDrivers(pending);
       
       // Load deliveries from Firebase
+      console.log('📡 Loading deliveries from Firebase...');
       const allDeliveries = await deliveryService.getAll();
+      console.log(`✅ Loaded ${allDeliveries.length} deliveries from Firebase`);
       
       if (allDeliveries.length === 0) {
         // If no deliveries in Firebase, create demo deliveries
+        console.log('📦 No deliveries found. Creating demo deliveries...');
         const demoDeliveries = generateDemoDeliveries();
         // Save each demo delivery to Firebase
         for (const delivery of demoDeliveries) {
@@ -247,7 +250,7 @@ function AdminDashboard() {
       
       calculateQuickStats();
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       toast.error('Failed to load data from Firebase');
     } finally {
       setLoading(false);
@@ -309,6 +312,7 @@ function AdminDashboard() {
   // UPDATED: Update delivery location in Firebase
   const updateDeliveryLocation = async (deliveryId, location) => {
     try {
+      console.log(`📍 Updating location for delivery ${deliveryId} to: ${location}`);
       await deliveryService.update(deliveryId, {
         currentLocation: location,
         locationUpdatedAt: new Date().toISOString()
@@ -318,7 +322,7 @@ function AdminDashboard() {
       setCustomLocation("");
       loadData();
     } catch (error) {
-      console.error('Error updating location:', error);
+      console.error('❌ Error updating location:', error);
       toast.error('Failed to update location');
     }
   };
@@ -393,6 +397,7 @@ function AdminDashboard() {
             toast.success(`Receipt ${receipt.receiptId} generated!`, { id: "receipt-gen" });
             
             // Update delivery in Firebase
+            console.log(`📝 Updating delivery ${selectedDelivery.id} with receipt`);
             await deliveryService.update(selectedDelivery.id, {
               receipt: receipt,
               receiptSent: true,
@@ -402,7 +407,7 @@ function AdminDashboard() {
             
             loadData();
           } catch (error) {
-            console.error('Error generating receipt:', error);
+            console.error('❌ Error generating receipt:', error);
             toast.error('Failed to generate receipt.', { id: "receipt-gen" });
           }
         } else {
@@ -410,7 +415,7 @@ function AdminDashboard() {
         }
       }, 500);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error:', error);
       toast.error('Failed to generate receipt');
     }
   };
@@ -447,6 +452,7 @@ function AdminDashboard() {
     }
     
     try {
+      console.log(`📝 Assigning driver ${assignDriverName} to delivery ${deliveryId}`);
       await deliveryService.update(deliveryId, {
         driverName: assignDriverName,
         driverEmail: assignDriverEmail,
@@ -459,7 +465,7 @@ function AdminDashboard() {
       setAssignDriverEmail("");
       loadData();
     } catch (error) {
-      console.error('Error assigning delivery:', error);
+      console.error('❌ Error assigning delivery:', error);
       toast.error('Failed to assign delivery');
     }
   };
@@ -539,6 +545,7 @@ function AdminDashboard() {
     };
     
     try {
+      console.log('📝 Creating new delivery:', newDelivery);
       await deliveryService.create(newDelivery);
       toast.success(`📦 Delivery created! Tracking ID: ${newTrackingId}`);
       loadData();
@@ -549,7 +556,7 @@ function AdminDashboard() {
         packageDescription: "", itemName: "", quantity: 1, unitPrice: 25 
       });
     } catch (error) {
-      console.error('Error creating delivery:', error);
+      console.error('❌ Error creating delivery:', error);
       toast.error('Failed to create delivery');
     }
   };
@@ -568,6 +575,8 @@ function AdminDashboard() {
   // UPDATED: Update delivery status with Firebase
   const updateDeliveryStatus = async (deliveryId, newStatus, successMessage) => {
     try {
+      console.log(`📝 Updating delivery ${deliveryId} status to: ${newStatus}`);
+      
       const updates = {
         status: newStatus,
         updatedAt: new Date().toISOString()
@@ -585,7 +594,7 @@ function AdminDashboard() {
       toast.success(successMessage);
       loadData();
     } catch (error) {
-      console.error('Error updating delivery status:', error);
+      console.error('❌ Error updating delivery status:', error);
       toast.error('Failed to update delivery status');
     }
   };
