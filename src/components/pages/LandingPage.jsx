@@ -102,13 +102,12 @@ function LandingPage() {
     }
   }, [showCustomerPortal, customerEmail]);
 
-  // UPDATED: Refresh function to load latest deliveries from Firebase
+  // Refresh function to load latest deliveries from Firebase
   const refreshDeliveries = async () => {
     if (!customerEmail) return;
     
     setIsRefreshing(true);
     try {
-      // Use Firebase service to get deliveries by email
       const userDeliveries = await deliveryService.getByEmail(customerEmail);
       setCustomerDeliveries(userDeliveries);
       
@@ -132,7 +131,7 @@ function LandingPage() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // UPDATED: Handle Track Package with Firebase
+  // Handle Track Package with Firebase
   const handleTrackPackage = async () => {
     if (!trackingId.trim()) {
       toast.error("Please enter a tracking ID");
@@ -140,7 +139,6 @@ function LandingPage() {
     }
     
     try {
-      // Use Firebase service to get delivery by tracking ID
       const delivery = await deliveryService.getByTrackingId(trackingId.trim());
       
       if (delivery) {
@@ -157,7 +155,7 @@ function LandingPage() {
     }
   };
 
-  // UPDATED: SECURE ADMIN ACCESS + Customer Login with Firebase
+  // SECURE ADMIN ACCESS + Customer Login with Firebase
   const handleCustomerLogin = async () => {
     if (!customerEmail.trim()) {
       toast.error("Please enter your email");
@@ -186,7 +184,6 @@ function LandingPage() {
     // Regular customer login - Use Firebase
     setLoading(true);
     try {
-      // Use Firebase service to get deliveries by email
       const userDeliveries = await deliveryService.getByEmail(customerEmail);
       
       setCustomerDeliveries(userDeliveries);
@@ -195,7 +192,6 @@ function LandingPage() {
       if (userDeliveries.length === 0) {
         toast.error(`No deliveries found for "${customerEmail}". Please check with the sender.`);
         
-        // Check if there are any deliveries in the system
         const allDeliveries = await deliveryService.getAll();
         if (allDeliveries.length > 0) {
           const availableEmails = [...new Set(allDeliveries.map(d => d.customerEmail).filter(Boolean))];
@@ -490,7 +486,6 @@ function LandingPage() {
                               </div>
                             </div>
                             
-                            {/* Live Location Display */}
                             {delivery.currentLocation && delivery.status !== "delivered" && (
                               <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
                                 <div className="flex items-center gap-2 mb-1">
@@ -518,14 +513,12 @@ function LandingPage() {
                               <div className="font-semibold">${delivery.price || 25}</div>
                             </div>
                             
-                            {/* Receipt Button - Only show if receipt exists */}
                             {hasReceipt && (
                               <button className="mt-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105" onClick={(e) => { e.stopPropagation(); viewReceipt(delivery); }}>
                                 <FileText size={12} className="inline mr-1" /> View Receipt
                               </button>
                             )}
                             
-                            {/* Refresh indicator for live updates */}
                             <div className="mt-2 text-[10px] text-gray-400 text-right">
                               <span className="inline-flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
@@ -850,7 +843,6 @@ function LandingPage() {
                 </div>
               </div>
 
-              {/* Live Location Section */}
               {trackedDelivery.currentLocation && trackedDelivery.status !== "delivered" && (
                 <div className="mb-5 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
                   <div className="flex items-center gap-2 mb-2">
@@ -940,7 +932,6 @@ function LandingPage() {
                 <button onClick={() => setShowReceiptModal(false)} className="cursor-pointer text-2xl hover:text-red-500 transition">✕</button>
               </div>
               
-              {/* Hidden receipt template with inline styles */}
               <div className="fixed -top-[9999px] -left-[9999px] z-[-1]">
                 <div ref={receiptRef} style={{ 
                   width: '420px', 
@@ -1014,7 +1005,6 @@ function LandingPage() {
                 </div>
               </div>
               
-              {/* Preview */}
               <div className="max-h-[60vh] overflow-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white mb-4">
                 <div className="p-4">
                   <div className="text-center mb-4 border-b-2 border-black pb-2">
