@@ -1,27 +1,7 @@
 // src/services/firebase.js
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  doc,
-  query,
-  where,
-  deleteDoc,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-  getDoc
-} from 'firebase/firestore';
+// 🔥 FIREBASE WITH CDN - No npm install needed!
 
-// ============================================
-// 🔥 YOUR FIREBASE CONFIGURATION
-// ============================================
+// Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCWpNDyHhFhZOXecMU79uDUKJXVeevEoVo",
   authDomain: "cycle-d52bd.firebaseapp.com",
@@ -32,73 +12,92 @@ const firebaseConfig = {
   measurementId: "G-BSMZF71LWZ"
 };
 
-// ============================================
-// Initialize Firebase
-// ============================================
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
+// Load Firebase from CDN dynamically
+const loadFirebase = () => {
+  return new Promise((resolve, reject) => {
+    // Check if already loaded
+    if (window.firebase) {
+      resolve(window.firebase);
+      return;
+    }
 
-// ============================================
-// DELIVERY SERVICE - All database operations
-// ============================================
+    // Load Firebase scripts
+    const scripts = [
+      'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
+      'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js'
+    ];
+
+    let loaded = 0;
+    scripts.forEach(src => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.onload = () => {
+        loaded++;
+        if (loaded === scripts.length) {
+          // Initialize Firebase
+          const app = window.firebase.initializeApp(firebaseConfig);
+          const db = window.firebase.firestore();
+          const analytics = window.firebase.analytics();
+          resolve({ app, db, analytics, firebase: window.firebase });
+        }
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  });
+};
+
+// Firebase service wrapper
+let firebaseInstance = null;
+
 export const deliveryService = {
-  /**
-   * Get all deliveries from Firebase
-   * @returns {Promise<Array>} Array of delivery objects
-   */
+  // Initialize Firebase
+  init: async () => {
+    if (!firebaseInstance) {
+      firebaseInstance = await loadFirebase();
+    }
+    return firebaseInstance;
+  },
+
+  // Get all deliveries
   getAll: async () => {
     try {
-      const snapshot = await getDocs(collection(db, 'deliveries'));
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
+      const { db } = await deliveryService.init();
+      const snapshot = await db.collection('deliveries').get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error('Error getting all deliveries:', error);
+      console.error('Error getting deliveries:', error);
       return [];
     }
   },
 
-  /**
-   * Get deliveries by customer email
-   * @param {string} email - Customer's email address
-   * @returns {Promise<Array>} Array of delivery objects
-   */
+  // Get deliveries by email
   getByEmail: async (email) => {
     try {
-      const q = query(
-        collection(db, 'deliveries'), 
-        where('customerEmail', '==', email.toLowerCase()),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
+      const { db } = await deliveryService.init();
+      const snapshot = await db
+        .collection('deliveries')
+        .where('customerEmail', '==', email.toLowerCase())
+        .orderBy('createdAt', 'desc')
+        .get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error('Error getting deliveries by email:', error);
       return [];
     }
   },
 
-  /**
-   * Get delivery by tracking ID
-   * @param {string} trackingId - Tracking ID
-   * @returns {Promise<Object|null>} Delivery object or null if not found
-   */
+  // Get delivery by tracking ID
   getByTrackingId: async (trackingId) => {
     try {
-      const q = query(
-        collection(db, 'deliveries'), 
-        where('trackingId', '==', trackingId.toUpperCase())
-      );
-      const snapshot = await getDocs(q);
-      const deliveries = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
+      const { db } = await deliveryService.init();
+      const snapshot = await db
+        .collection('deliveries')
+        .where('trackingId', '==', trackingId.toUpperCase())
+        .get();
+      const deliveries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return deliveries[0] || null;
     } catch (error) {
       console.error('Error getting delivery by tracking ID:', error);
@@ -106,63 +105,43 @@ export const deliveryService = {
     }
   },
 
-  /**
-   * Create a new delivery
-   * @param {Object} data - Delivery data
-   * @returns {Promise<Object>} Created delivery object
-   */
+  // Create delivery
   create: async (data) => {
     try {
-      const deliveryData = {
+      const { db } = await deliveryService.init();
+      const docRef = await db.collection('deliveries').add({
         ...data,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: data.status || 'pending'
-      };
-      
-      const docRef = await addDoc(collection(db, 'deliveries'), deliveryData);
-      return { 
-        id: docRef.id, 
-        ...deliveryData 
-      };
+      });
+      return { id: docRef.id, ...data };
     } catch (error) {
       console.error('Error creating delivery:', error);
       throw error;
     }
   },
 
-  /**
-   * Update an existing delivery
-   * @param {string} id - Delivery document ID
-   * @param {Object} data - Updated delivery data
-   * @returns {Promise<Object>} Updated delivery object
-   */
+  // Update delivery
   update: async (id, data) => {
     try {
-      const updateData = {
+      const { db } = await deliveryService.init();
+      await db.collection('deliveries').doc(id).update({
         ...data,
         updatedAt: new Date().toISOString()
-      };
-      
-      await updateDoc(doc(db, 'deliveries', id), updateData);
-      return { 
-        id, 
-        ...updateData 
-      };
+      });
+      return { id, ...data };
     } catch (error) {
       console.error('Error updating delivery:', error);
       throw error;
     }
   },
 
-  /**
-   * Delete a delivery by ID
-   * @param {string} id - Delivery document ID
-   * @returns {Promise<boolean>} Success status
-   */
+  // Delete delivery
   delete: async (id) => {
     try {
-      await deleteDoc(doc(db, 'deliveries', id));
+      const { db } = await deliveryService.init();
+      await db.collection('deliveries').doc(id).delete();
       return true;
     } catch (error) {
       console.error('Error deleting delivery:', error);
@@ -170,190 +149,64 @@ export const deliveryService = {
     }
   },
 
-  /**
-   * Get recent deliveries (last N)
-   * @param {number} count - Number of deliveries to return
-   * @returns {Promise<Array>} Array of delivery objects
-   */
+  // Get recent deliveries
   getRecent: async (count = 10) => {
     try {
-      const q = query(
-        collection(db, 'deliveries'),
-        orderBy('createdAt', 'desc'),
-        limit(count)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
+      const { db } = await deliveryService.init();
+      const snapshot = await db
+        .collection('deliveries')
+        .orderBy('createdAt', 'desc')
+        .limit(count)
+        .get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error('Error getting recent deliveries:', error);
       return [];
     }
   },
 
-  /**
-   * Get deliveries by status
-   * @param {string} status - Delivery status (pending, assigned, in_transit, etc.)
-   * @returns {Promise<Array>} Array of delivery objects
-   */
+  // Get deliveries by status
   getByStatus: async (status) => {
     try {
-      const q = query(
-        collection(db, 'deliveries'),
-        where('status', '==', status),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
+      const { db } = await deliveryService.init();
+      const snapshot = await db
+        .collection('deliveries')
+        .where('status', '==', status)
+        .orderBy('createdAt', 'desc')
+        .get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
       console.error('Error getting deliveries by status:', error);
       return [];
     }
   },
 
-  /**
-   * Listen to real-time updates for all deliveries
-   * @param {Function} callback - Function to call on data change
-   * @returns {Function} Unsubscribe function
-   */
+  // Real-time listener for all deliveries
   listenToAll: (callback) => {
-    return onSnapshot(collection(db, 'deliveries'), (snapshot) => {
-      const deliveries = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-      callback(deliveries);
-    }, (error) => {
-      console.error('Error listening to deliveries:', error);
-    });
-  },
-
-  /**
-   * Listen to real-time updates for a specific delivery
-   * @param {string} id - Delivery document ID
-   * @param {Function} callback - Function to call on data change
-   * @returns {Function} Unsubscribe function
-   */
-  listenToOne: (id, callback) => {
-    return onSnapshot(doc(db, 'deliveries', id), (snapshot) => {
-      if (snapshot.exists()) {
-        callback({ 
-          id: snapshot.id, 
-          ...snapshot.data() 
-        });
-      } else {
-        callback(null);
-      }
-    }, (error) => {
-      console.error('Error listening to delivery:', error);
-    });
-  },
-
-  /**
-   * Get a single delivery by ID
-   * @param {string} id - Delivery document ID
-   * @returns {Promise<Object|null>} Delivery object or null if not found
-   */
-  getById: async (id) => {
-    try {
-      const docRef = doc(db, 'deliveries', id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error getting delivery by ID:', error);
-      return null;
-    }
-  },
-
-  /**
-   * Get deliveries by driver name
-   * @param {string} driverName - Driver's name
-   * @returns {Promise<Array>} Array of delivery objects
-   */
-  getByDriver: async (driverName) => {
-    try {
-      const q = query(
-        collection(db, 'deliveries'),
-        where('driverName', '==', driverName),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-    } catch (error) {
-      console.error('Error getting deliveries by driver:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Get deliveries by date range
-   * @param {string} startDate - Start date ISO string
-   * @param {string} endDate - End date ISO string
-   * @returns {Promise<Array>} Array of delivery objects
-   */
-  getByDateRange: async (startDate, endDate) => {
-    try {
-      const q = query(
-        collection(db, 'deliveries'),
-        where('createdAt', '>=', startDate),
-        where('createdAt', '<=', endDate),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      }));
-    } catch (error) {
-      console.error('Error getting deliveries by date range:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Count deliveries by status
-   * @returns {Promise<Object>} Count of deliveries by status
-   */
-  countByStatus: async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'deliveries'));
-      const deliveries = snapshot.docs.map(doc => doc.data());
-      
-      const counts = {
-        pending: 0,
-        assigned: 0,
-        picked_up: 0,
-        in_transit: 0,
-        delivered: 0
-      };
-      
-      deliveries.forEach(delivery => {
-        if (counts.hasOwnProperty(delivery.status)) {
-          counts[delivery.status]++;
-        }
+    deliveryService.init().then(({ db }) => {
+      return db.collection('deliveries').onSnapshot((snapshot) => {
+        const deliveries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(deliveries);
+      }, (error) => {
+        console.error('Error listening to deliveries:', error);
       });
-      
-      return counts;
-    } catch (error) {
-      console.error('Error counting deliveries by status:', error);
-      return {};
-    }
+    });
+  },
+
+  // Real-time listener for a specific delivery
+  listenToOne: (id, callback) => {
+    deliveryService.init().then(({ db }) => {
+      return db.collection('deliveries').doc(id).onSnapshot((doc) => {
+        if (doc.exists) {
+          callback({ id: doc.id, ...doc.data() });
+        } else {
+          callback(null);
+        }
+      }, (error) => {
+        console.error('Error listening to delivery:', error);
+      });
+    });
   }
 };
 
-// Export db for direct use if needed
-export { db, analytics, app };
-
-// Default export
-export default db;
+export default deliveryService;
