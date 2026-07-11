@@ -24,6 +24,9 @@ import {
   MessageSquare, Heart as HeartIcon, Smile, Frown, Meh, Lightbulb
 } from "lucide-react";
 
+// Import Firebase service
+import { deliveryService } from '../../services/firebase';
+
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -154,7 +157,6 @@ function AdminDashboard() {
     loadData();
     loadNotifications();
     generateMockData();
-    calculateQuickStats();
     setRandomFunFact();
     setRandomJoke();
     setRandomQuote();
@@ -213,29 +215,43 @@ function AdminDashboard() {
     ]);
   };
 
-  const loadData = () => {
+  // UPDATED: Load data from Firebase
+  const loadData = async () => {
     setLoading(true);
-    
-    const allUsers = JSON.parse(localStorage.getItem("cycle_users") || "[]");
-    const allDrivers = allUsers.filter(u => u.userType === "driver");
-    const allCustomers = allUsers.filter(u => u.userType === "customer");
-    const pending = allDrivers.filter(d => d.status === "pending");
-    
-    setDrivers(allDrivers.filter(d => d.status === "active"));
-    setCustomers(allCustomers);
-    setPendingDrivers(pending);
-    
-    const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-    if (allDeliveries.length === 0) {
-      const demoDeliveries = generateDemoDeliveries();
-      localStorage.setItem("cycle_deliveries", JSON.stringify(demoDeliveries));
-      setDeliveries(demoDeliveries);
-    } else {
-      setDeliveries(allDeliveries);
+    try {
+      // Load users from localStorage (keep as is for drivers/customers)
+      const allUsers = JSON.parse(localStorage.getItem("cycle_users") || "[]");
+      const allDrivers = allUsers.filter(u => u.userType === "driver");
+      const allCustomers = allUsers.filter(u => u.userType === "customer");
+      const pending = allDrivers.filter(d => d.status === "pending");
+      
+      setDrivers(allDrivers.filter(d => d.status === "active"));
+      setCustomers(allCustomers);
+      setPendingDrivers(pending);
+      
+      // Load deliveries from Firebase
+      const allDeliveries = await deliveryService.getAll();
+      
+      if (allDeliveries.length === 0) {
+        // If no deliveries in Firebase, create demo deliveries
+        const demoDeliveries = generateDemoDeliveries();
+        // Save each demo delivery to Firebase
+        for (const delivery of demoDeliveries) {
+          await deliveryService.create(delivery);
+        }
+        setDeliveries(demoDeliveries);
+        toast.success('📦 Demo deliveries created in Firebase!');
+      } else {
+        setDeliveries(allDeliveries);
+      }
+      
+      calculateQuickStats();
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Failed to load data from Firebase');
+    } finally {
+      setLoading(false);
     }
-    
-    calculateQuickStats();
-    setLoading(false);
   };
 
   const generateDemoDeliveries = () => {
@@ -254,7 +270,6 @@ function AdminDashboard() {
     const items = ["Smartphone", "Laptop", "Books", "Clothing", "Electronics", "Furniture"];
     
     return addresses.map((addr, index) => ({
-      id: Date.now() + index,
       trackingId: `CYC-${Date.now() + index}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       customerName: customersList[index % customersList.length],
       customerEmail: customerEmails[index % customerEmails.length],
@@ -291,20 +306,24 @@ function AdminDashboard() {
     setNotifications(demoNotifications);
   };
 
-  const updateDeliveryLocation = (deliveryId, location) => {
-    const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-    const index = allDeliveries.findIndex(d => d.id === deliveryId);
-    if (index !== -1) {
-      allDeliveries[index].currentLocation = location;
-      allDeliveries[index].locationUpdatedAt = new Date().toISOString();
-      localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
-      loadData();
+  // UPDATED: Update delivery location in Firebase
+  const updateDeliveryLocation = async (deliveryId, location) => {
+    try {
+      await deliveryService.update(deliveryId, {
+        currentLocation: location,
+        locationUpdatedAt: new Date().toISOString()
+      });
       toast.success(`📍 Location updated: ${location}`);
       setShowLocationModal(false);
       setCustomLocation("");
+      loadData();
+    } catch (error) {
+      console.error('Error updating location:', error);
+      toast.error('Failed to update location');
     }
   };
 
+  // UPDATED: Generate and download receipt with Firebase
   const generateAndDownloadReceipt = async () => {
     if (selectedDelivery.receiptGenerated) {
       toast.error("Receipt has already been generated for this delivery.");
@@ -373,15 +392,14 @@ function AdminDashboard() {
             link.click();
             toast.success(`Receipt ${receipt.receiptId} generated!`, { id: "receipt-gen" });
             
-            const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-            const index = allDeliveries.findIndex(d => d.id === selectedDelivery.id);
-            if (index !== -1) {
-              allDeliveries[index].receipt = receipt;
-              allDeliveries[index].receiptSent = true;
-              allDeliveries[index].receiptGenerated = true;
-              allDeliveries[index].status = "in_transit";
-              localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
-            }
+            // Update delivery in Firebase
+            await deliveryService.update(selectedDelivery.id, {
+              receipt: receipt,
+              receiptSent: true,
+              receiptGenerated: true,
+              status: "in_transit"
+            });
+            
             loadData();
           } catch (error) {
             console.error('Error generating receipt:', error);
@@ -421,24 +439,28 @@ function AdminDashboard() {
     setShowReceiptInfoModal(true);
   };
 
-  const handleAssignDelivery = (deliveryId) => {
+  // UPDATED: Assign delivery with Firebase
+  const handleAssignDelivery = async (deliveryId) => {
     if (!assignDriverName || !assignDriverEmail) {
       toast.error("Please fill in driver details");
       return;
     }
     
-    const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-    const index = allDeliveries.findIndex(d => d.id === deliveryId);
-    if (index !== -1) {
-      allDeliveries[index].driverName = assignDriverName;
-      allDeliveries[index].driverEmail = assignDriverEmail;
-      allDeliveries[index].status = "assigned";
-      localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
-      loadData();
+    try {
+      await deliveryService.update(deliveryId, {
+        driverName: assignDriverName,
+        driverEmail: assignDriverEmail,
+        status: "assigned"
+      });
+      
       toast.success(`✅ ${assignDriverName} assigned to delivery!`);
       setShowAssignModal(false);
       setAssignDriverName("");
       setAssignDriverEmail("");
+      loadData();
+    } catch (error) {
+      console.error('Error assigning delivery:', error);
+      toast.error('Failed to assign delivery');
     }
   };
 
@@ -484,7 +506,8 @@ function AdminDashboard() {
     }
   };
 
-  const handleAddDelivery = () => {
+  // UPDATED: Add delivery with Firebase
+  const handleAddDelivery = async () => {
     if (!deliveryForm.pickupAddress || !deliveryForm.dropoffAddress) {
       toast.error("Please fill in pickup and dropoff addresses");
       return;
@@ -494,7 +517,6 @@ function AdminDashboard() {
     const totalPrice = (deliveryForm.quantity || 1) * (deliveryForm.unitPrice || 25);
     
     const newDelivery = {
-      id: Date.now(),
       trackingId: newTrackingId,
       customerName: deliveryForm.customerName || "Walk-in Customer",
       customerEmail: deliveryForm.customerEmail || "customer@example.com",
@@ -510,21 +532,26 @@ function AdminDashboard() {
       driverName: "Unassigned",
       driverId: null,
       price: totalPrice,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 3 * 86400000).toISOString(),
       currentLocation: null,
       receiptGenerated: false,
       priority: "Normal"
     };
     
-    const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-    allDeliveries.push(newDelivery);
-    localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
-    loadData();
-    setShowDeliveryModal(false);
-    setDeliveryForm({ customerName: "", customerEmail: "", customerPhone: "", pickupAddress: "", dropoffAddress: "", packageWeight: "", packageDescription: "", itemName: "", quantity: 1, unitPrice: 25 });
-    toast.success(`📦 Delivery created! Tracking ID: ${newTrackingId}`);
+    try {
+      await deliveryService.create(newDelivery);
+      toast.success(`📦 Delivery created! Tracking ID: ${newTrackingId}`);
+      loadData();
+      setShowDeliveryModal(false);
+      setDeliveryForm({ 
+        customerName: "", customerEmail: "", customerPhone: "", 
+        pickupAddress: "", dropoffAddress: "", packageWeight: "", 
+        packageDescription: "", itemName: "", quantity: 1, unitPrice: 25 
+      });
+    } catch (error) {
+      console.error('Error creating delivery:', error);
+      toast.error('Failed to create delivery');
+    }
   };
 
   const handleApproveDriver = (driverId) => {
@@ -538,21 +565,28 @@ function AdminDashboard() {
     }
   };
 
-  const updateDeliveryStatus = (deliveryId, newStatus, successMessage) => {
-    const allDeliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
-    const index = allDeliveries.findIndex(d => d.id === deliveryId);
-    if (index !== -1) {
-      allDeliveries[index].status = newStatus;
-      allDeliveries[index].updatedAt = new Date().toISOString();
+  // UPDATED: Update delivery status with Firebase
+  const updateDeliveryStatus = async (deliveryId, newStatus, successMessage) => {
+    try {
+      const updates = {
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      };
+      
       if (newStatus === "delivered") {
-        allDeliveries[index].deliveredAt = new Date().toISOString();
-        setCelebratingDelivery(allDeliveries[index]);
+        updates.deliveredAt = new Date().toISOString();
+        const delivery = deliveries.find(d => d.id === deliveryId);
+        setCelebratingDelivery(delivery);
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 5000);
       }
-      localStorage.setItem("cycle_deliveries", JSON.stringify(allDeliveries));
-      loadData();
+      
+      await deliveryService.update(deliveryId, updates);
       toast.success(successMessage);
+      loadData();
+    } catch (error) {
+      console.error('Error updating delivery status:', error);
+      toast.error('Failed to update delivery status');
     }
   };
 
@@ -560,8 +594,8 @@ function AdminDashboard() {
     let filtered = [...deliveries];
     if (searchTerm) {
       filtered = filtered.filter(d => 
-        d.trackingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+        d.trackingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== "all") {
@@ -650,7 +684,7 @@ function AdminDashboard() {
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar - Enhanced with more sections */}
+      {/* Sidebar */}
       <div className={`fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 text-gray-800 dark:text-white transition-all duration-300 z-[1000] overflow-y-auto shadow-2xl
         ${sidebarOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-[70px]'} 
         md:w-[70px] hover:md:w-[280px] group/sidebar transition-all duration-300`}>
@@ -679,10 +713,10 @@ function AdminDashboard() {
             Main
           </div>
           {[
-            { id: "overview", label: "Dashboard", icon: LayoutDashboard, color: "text-indigo-500", emoji: "📊" },
-            { id: "drivers", label: "Drivers", icon: Truck, color: "text-blue-500", emoji: "🚚" },
-            { id: "customers", label: "Customers", icon: Users, color: "text-green-500", emoji: "👥" },
-            { id: "deliveries", label: "Deliveries", icon: Package, color: "text-purple-500", emoji: "📦" }
+            { id: "overview", label: "Dashboard", icon: LayoutDashboard, color: "text-indigo-500" },
+            { id: "drivers", label: "Drivers", icon: Truck, color: "text-blue-500" },
+            { id: "customers", label: "Customers", icon: Users, color: "text-green-500" },
+            { id: "deliveries", label: "Deliveries", icon: Package, color: "text-purple-500" }
           ].map(item => {
             const IconComponent = item.icon;
             return (
@@ -829,7 +863,7 @@ function AdminDashboard() {
             </div>
           </div>
 
-          {/* Overview Tab - Enhanced with fun widgets */}
+          {/* Overview Tab */}
           {activeTab === "overview" && (
             <>
               {/* Stats Grid */}
