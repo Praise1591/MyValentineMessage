@@ -10,11 +10,8 @@ import {
   Eye, Navigation, LocateFixed, Calendar, Clock as ClockIcon,
   Sun, Moon, Lock, Key, User, LogIn, Award, TrendingUp, 
   Heart, Gift, Coffee, Smartphone, Laptop, Bot, Cpu,
-  Sparkles, UserCheck, RefreshCw
+  Sparkles, UserCheck
 } from "lucide-react";
-
-// Import Firebase service
-import { deliveryService } from '../../services/firebase';
 
 function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,7 +32,6 @@ function LandingPage() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Refs for receipt capture
   const receiptRef = useRef(null);
@@ -94,35 +90,17 @@ function LandingPage() {
 
   // Auto-refresh deliveries every 15 seconds to show updated locations
   useEffect(() => {
-    if (showCustomerPortal && customerEmail) {
+    if (showCustomerPortal && customerEmail && !customerEmail.includes("admin+secret") && customerEmail !== "admin@cycle.secret" && customerEmail !== "cycle.admin@system.local") {
       const interval = setInterval(() => {
-        refreshDeliveries();
+        const deliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
+        const userDeliveries = deliveries.filter(d => 
+          d.customerEmail?.toLowerCase() === customerEmail.toLowerCase()
+        );
+        setCustomerDeliveries(userDeliveries);
       }, 15000);
       return () => clearInterval(interval);
     }
   }, [showCustomerPortal, customerEmail]);
-
-  // Refresh function to load latest deliveries from Firebase
-  const refreshDeliveries = async () => {
-    if (!customerEmail) return;
-    
-    setIsRefreshing(true);
-    try {
-      const userDeliveries = await deliveryService.getByEmail(customerEmail);
-      setCustomerDeliveries(userDeliveries);
-      
-      if (userDeliveries.length === 0) {
-        toast.error(`No deliveries found for "${customerEmail}".`);
-      } else {
-        toast.success(`📦 Found ${userDeliveries.length} deliveries!`);
-      }
-    } catch (error) {
-      console.error('Error refreshing deliveries:', error);
-      toast.error('Failed to refresh deliveries');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const scrollToSection = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
@@ -131,43 +109,42 @@ function LandingPage() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Handle Track Package with Firebase
-  const handleTrackPackage = async () => {
+  // Handle Track Package - FIXED: Added this missing function
+  const handleTrackPackage = () => {
     if (!trackingId.trim()) {
       toast.error("Please enter a tracking ID");
       return;
     }
     
-    try {
-      const delivery = await deliveryService.getByTrackingId(trackingId.trim());
-      
-      if (delivery) {
-        setTrackedDelivery(delivery);
-        setShowTrackModal(true);
-        setTrackingId("");
-        toast.success("✅ Delivery found!");
-      } else {
-        toast.error("No delivery found with that tracking ID. Please check and try again.");
-      }
-    } catch (error) {
-      console.error('Error tracking package:', error);
-      toast.error("Error searching for delivery. Please try again.");
+    const deliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
+    const delivery = deliveries.find(d => d.trackingId === trackingId);
+    
+    if (delivery) {
+      setTrackedDelivery(delivery);
+      setShowTrackModal(true);
+      setTrackingId(""); // Clear after tracking
+    } else {
+      toast.error("No delivery found with that tracking ID");
     }
   };
 
-  // SECURE ADMIN ACCESS + Customer Login with Firebase
-  const handleCustomerLogin = async () => {
+  // SECURE ADMIN ACCESS - Hidden in Customer Portal
+  const handleCustomerLogin = () => {
     if (!customerEmail.trim()) {
       toast.error("Please enter your email");
       return;
     }
     
     // SECRET ADMIN ACCESS PATTERN - Hidden from UI
+    // Method 1: Exact secret email
+    // Method 2: Email containing admin+secret
+    // Method 3: Email containing admin@cycle
     const isAdminSecret = customerEmail.toLowerCase() === "cycle.admin@system.local" || 
                           customerEmail.toLowerCase().includes("admin+secret") ||
                           customerEmail.toLowerCase() === "admin@cycle.secret";
     
     if (isAdminSecret) {
+      // Admin access granted - no additional password needed
       localStorage.setItem("admin_authenticated", "true");
       toast.success("🔐 Administrative access granted! Redirecting to control panel...", {
         icon: '🔑',
@@ -181,25 +158,24 @@ function LandingPage() {
       return;
     }
     
-    // Regular customer login - Use Firebase
+    // Regular customer login
     setLoading(true);
-    try {
-      const userDeliveries = await deliveryService.getByEmail(customerEmail);
+    setTimeout(() => {
+      const deliveries = JSON.parse(localStorage.getItem("cycle_deliveries") || "[]");
+      const userDeliveries = deliveries.filter(d => 
+        d.customerEmail?.toLowerCase() === customerEmail.toLowerCase()
+      );
       
       setCustomerDeliveries(userDeliveries);
       setShowCustomerPortal(true);
+      setLoading(false);
       
       if (userDeliveries.length === 0) {
-        toast.error(`No deliveries found for "${customerEmail}". Please check with the sender.`);
+        toast.error("No deliveries found for this email. Please check with the sender.");
       } else {
         toast.success(`Welcome! Found ${userDeliveries.length} delivery/deliveries.`);
       }
-    } catch (error) {
-      console.error('Error during login:', error);
-      toast.error("Error loading deliveries. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    }, 1000);
   };
 
   const handleLogout = () => {
@@ -410,24 +386,14 @@ function LandingPage() {
                     </h3>
                     <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-slate-500'}`}>{customerEmail}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      className="border-2 border-blue-500/30 px-3 py-2 rounded-full font-bold transition-all hover:border-blue-500 disabled:opacity-50 text-sm flex items-center gap-2"
-                      onClick={refreshDeliveries}
-                      disabled={isRefreshing}
-                    >
-                      <RefreshCw size={16} className={`${isRefreshing ? 'animate-spin' : ''}`} />
-                      {isRefreshing ? '...' : 'Refresh'}
-                    </button>
-                    <button className="border-2 border-red-500/30 px-4 py-2 rounded-full font-bold transition-all hover:border-red-500 hover:text-red-500" onClick={handleLogout}>
-                      Logout
-                    </button>
-                  </div>
+                  <button className="border-2 border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full font-bold transition-all hover:border-red-500 hover:text-red-500" onClick={handleLogout}>
+                    Logout
+                  </button>
                 </div>
                 
                 <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 mb-4 flex-wrap">
                   {[
-                    { id: "deliveries", label: `My Deliveries (${customerDeliveries.length})`, icon: Package },
+                    { id: "deliveries", label: "My Deliveries", icon: Package },
                     { id: "track", label: "Track Package", icon: Search }
                   ].map(tab => {
                     const IconComponent = tab.icon;
@@ -449,7 +415,7 @@ function LandingPage() {
                       <div className="text-center py-12">
                         <Package size={48} className="mx-auto opacity-30 mb-3" />
                         <p className="opacity-60">No deliveries found for this email.</p>
-                        <p className="text-xs opacity-40 mt-2">Please check with the sender or try refreshing.</p>
+                        <p className="text-xs opacity-40 mt-2">Please check with the sender.</p>
                       </div>
                     ) : (
                       customerDeliveries.map(delivery => {
@@ -547,15 +513,7 @@ function LandingPage() {
                     <div className="mt-5">
                       <h4 className="font-bold mb-3 flex items-center gap-2">
                         <Clock size={16} className="text-blue-500" />
-                        Your Recent Deliveries ({customerDeliveries.length})
-                        <button 
-                          className="ml-auto text-xs text-blue-500 hover:text-blue-600 transition flex items-center gap-1"
-                          onClick={refreshDeliveries}
-                          disabled={isRefreshing}
-                        >
-                          <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
-                          {isRefreshing ? '...' : 'Refresh'}
-                        </button>
+                        Your Recent Deliveries
                       </h4>
                       <div className="space-y-2">
                         {customerDeliveries.slice(0, 3).map(delivery => {
