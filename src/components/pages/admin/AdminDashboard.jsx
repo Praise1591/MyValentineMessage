@@ -25,7 +25,8 @@ import {
 } from "lucide-react";
 
 // Import Firebase service
-import { deliveryService } from '../../services/firebase';
+// Change from '../../services/firebase' to '../../firebase'
+import { deliveryService } from '/src/firebase-service.js';
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
